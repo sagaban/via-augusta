@@ -32,7 +32,7 @@ const spanishTranslations = {
   'about.description':
     'Via Augusta es una aplicación web gratuita y de código abierto. Permite crear o importar una ruta, consultar su distancia, desnivel y perfil de altitud, y exportarla en formato GPX.',
   'about.intendedUse':
-    'Via Augusta está pensada sobre todo para preparar una ruta en una pantalla grande. No está destinada al seguimiento de la ruta ni a la navegación en tiempo real sobre el terreno: exporta el GPX y ábrelo en tu aplicación o GPS de confianza.',
+    'Via Augusta está pensada sobre todo para preparar una ruta en una pantalla grande. En el móvil puedes guardar una ruta con el mapa de su zona y seguirla sin conexión con tu ubicación GPS. No es un navegador con indicaciones: lleva siempre un respaldo (GPS, mapa en papel, batería).',
   'about.privacy':
     'No hace falta registrarse. Las rutas no se guardan en ningún servidor de Via Augusta. Para calcular rutas, altitudes y búsquedas, el navegador envía las coordenadas necesarias a los servicios externos indicados más abajo.',
   'about.safetyTitle': 'Importante',
@@ -192,6 +192,34 @@ const spanishTranslations = {
     'Este nombre se usará en el archivo GPX y en las aplicaciones que lo importen.',
   'gpx.close': 'Cerrar',
   'gpx.download': 'Exportar el archivo GPX',
+
+  'offline.save': 'Guardar para usar sin conexión',
+  'offline.saveHint':
+    'Guarda la ruta y el mapa IGN de su zona (hasta escala 1:25.000) en este dispositivo para seguirla sin cobertura.',
+  'offline.saveNeedsElevation':
+    'Espera a que se calcule el perfil de altitud para guardar la ruta con sus altitudes.',
+  'offline.downloading': 'Descargando el mapa… {done} de {total} teselas',
+  'offline.cancel': 'Cancelar',
+  'offline.saved': 'Ruta guardada para usar sin conexión ({size}).',
+  'offline.savedPartial':
+    'Ruta guardada ({size}), pero {failed} teselas no se pudieron descargar. Puedes volver a guardarla con conexión.',
+  'offline.error': 'No se ha podido guardar la ruta para usarla sin conexión.',
+  'offline.unsupported': 'Este navegador no permite guardar rutas sin conexión.',
+  'offline.list': 'Rutas guardadas',
+  'offline.listTitle': 'Rutas sin conexión',
+  'offline.empty':
+    'Todavía no has guardado ninguna ruta. Crea o carga una ruta y usa «Exportar la ruta» → «Guardar para usar sin conexión».',
+  'offline.open': 'Abrir',
+  'offline.delete': 'Borrar',
+  'offline.confirmDelete': '¿Borrar?',
+  'offline.details': '{distance} km · {size} · {date}',
+  'offline.storage': 'Espacio usado en este dispositivo: {used}',
+  'offline.loadError': 'No se han podido leer las rutas guardadas.',
+  'offline.close': 'Cerrar',
+  'offline.offlineNotice':
+    'Sin conexión: solo se ve el mapa de las rutas guardadas.',
+  'offline.installHint':
+    'Consejo: en el móvil, añade Via Augusta a la pantalla de inicio y ábrela una vez con conexión antes de salir.',
 };
 
 /** Every translation key, derived from the Spanish reference dictionary. */
@@ -206,7 +234,7 @@ const englishTranslations: Record<TranslationKey, string> = {
   'about.description':
     'Via Augusta is a free, open-source web application. It lets you create or import a route, review its distance, elevation gain and profile, and export it as GPX.',
   'about.intendedUse':
-    'Via Augusta is designed primarily for planning a route on a large screen. It is not intended for following a route or for real-time navigation in the field: export the GPX and open it in the app or GPS device you trust.',
+    'Via Augusta is designed primarily for planning a route on a large screen. On your phone you can save a route with the map around it and follow it offline with your GPS position. It is not a turn-by-turn navigator: always carry a backup (GPS device, paper map, battery).',
   'about.privacy':
     'No account is required. Routes are not stored on any Via Augusta server. To calculate routes, elevations, and search results, your browser sends the necessary coordinates to the external services listed below.',
   'about.safetyTitle': 'Important',
@@ -366,6 +394,34 @@ const englishTranslations: Record<TranslationKey, string> = {
     'This name will be used in the GPX file and by applications that import it.',
   'gpx.close': 'Close',
   'gpx.download': 'Export the GPX file',
+
+  'offline.save': 'Save for offline use',
+  'offline.saveHint':
+    'Stores the route and the IGN map around it (down to 1:25,000) on this device so you can follow it without coverage.',
+  'offline.saveNeedsElevation':
+    'Wait until the elevation profile is ready to save the route with its elevations.',
+  'offline.downloading': 'Downloading the map… {done} of {total} tiles',
+  'offline.cancel': 'Cancel',
+  'offline.saved': 'Route saved for offline use ({size}).',
+  'offline.savedPartial':
+    'Route saved ({size}), but {failed} tiles could not be downloaded. You can save it again while online.',
+  'offline.error': 'The route could not be saved for offline use.',
+  'offline.unsupported': 'This browser cannot save routes for offline use.',
+  'offline.list': 'Saved routes',
+  'offline.listTitle': 'Offline routes',
+  'offline.empty':
+    'You have not saved any route yet. Create or load a route and use “Export the route” → “Save for offline use”.',
+  'offline.open': 'Open',
+  'offline.delete': 'Delete',
+  'offline.confirmDelete': 'Delete?',
+  'offline.details': '{distance} km · {size} · {date}',
+  'offline.storage': 'Storage used on this device: {used}',
+  'offline.loadError': 'Saved routes could not be read.',
+  'offline.close': 'Close',
+  'offline.offlineNotice':
+    'Offline: only the map of saved routes is available.',
+  'offline.installHint':
+    'Tip: on your phone, add Via Augusta to the home screen and open it once while online before you set out.',
 };
 
 /** Complete translation dictionaries keyed by supported language. */

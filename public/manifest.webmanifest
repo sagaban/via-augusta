@@ -1,0 +1,16 @@
+{
+  "name": "Via Augusta – Rutas de senderismo",
+  "short_name": "Via Augusta",
+  "description": "Planifica rutas de senderismo en España y síguelas sin conexión.",
+  "lang": "es",
+  "start_url": "./es/",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f1ea",
+  "theme_color": "#b3261e",
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

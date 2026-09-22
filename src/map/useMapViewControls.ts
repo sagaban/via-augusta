@@ -97,6 +97,10 @@ export function useMapViewControls(
   options: UseMapViewControlsOptions,
 ): MapViewControlsController {
   const locationMessageTimerRef = useRef<number | null>(null);
+  /** Active `watchPosition` identifier while the location is tracked. */
+  const locationWatchIdRef = useRef<number | null>(null);
+  /** Latest tracked position in map coordinates. */
+  const lastLocationRef = useRef<number[] | null>(null);
   const [baseMapStyle, setBaseMapStyle] = useState<BaseMapStyle>(
     DEFAULT_BASE_MAP_STYLE,
   );
@@ -170,6 +174,21 @@ export function useMapViewControls(
       return;
     }
 
+    const view = map.getView();
+    const centerOn = (coordinate: number[]) => {
+      view.animate({
+        center: coordinate,
+        zoom: Math.max(view.getZoom() ?? USER_LOCATION_ZOOM, USER_LOCATION_ZOOM),
+        duration: 600,
+      });
+    };
+
+    // Tracking is already running: the button recenters on the latest fix.
+    if (locationWatchIdRef.current !== null && lastLocationRef.current) {
+      centerOn(lastLocationRef.current);
+      return;
+    }
+
     if (!navigator.geolocation) {
       setLocationStatus('error');
       showTemporaryLocationMessage(options.t('geolocation.unavailable'));
@@ -180,40 +199,53 @@ export function useMapViewControls(
     setLocationMessage(options.t('geolocation.searching'));
     setLocationStatus('locating');
 
-    navigator.geolocation.getCurrentPosition(
+    const stopWatching = () => {
+      if (locationWatchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(locationWatchIdRef.current);
+        locationWatchIdRef.current = null;
+      }
+    };
+
+    stopWatching();
+
+    // Continuous tracking lets a hiker follow a saved route: the GPS keeps
+    // working without a network connection, and the marker moves with them.
+    locationWatchIdRef.current = navigator.geolocation.watchPosition(
       ({ coords }) => {
         const wgs84Coordinate = [coords.longitude, coords.latitude];
-
-        if (!isWgs84CoordinateInsideMapBounds(wgs84Coordinate)) {
-          setLocationStatus('error');
-          showTemporaryLocationMessage(options.t('geolocation.outside'));
-          return;
-        }
-
         const coordinate = fromWgs84(wgs84Coordinate);
 
-        if (!containsCoordinate(MAP_EXTENT, coordinate)) {
+        if (
+          !isWgs84CoordinateInsideMapBounds(wgs84Coordinate) ||
+          !containsCoordinate(MAP_EXTENT, coordinate)
+        ) {
+          stopWatching();
+          lastLocationRef.current = null;
           setLocationStatus('error');
           showTemporaryLocationMessage(options.t('geolocation.outside'));
           return;
         }
 
+        const isFirstFix = lastLocationRef.current === null;
+        lastLocationRef.current = coordinate;
         updateUserLocationMarker(marker, coordinate);
 
-        const view = map.getView();
-        const currentZoom = view.getZoom() ?? USER_LOCATION_ZOOM;
-
-        view.animate({
-          center: coordinate,
-          zoom: Math.max(currentZoom, USER_LOCATION_ZOOM),
-          duration: 600,
-        });
-
-        clearLocationMessageTimer();
-        setLocationMessage('');
-        setLocationStatus('located');
+        if (isFirstFix) {
+          centerOn(coordinate);
+          clearLocationMessageTimer();
+          setLocationMessage('');
+          setLocationStatus('located');
+        }
       },
       (error) => {
+        // A transient failure after a first fix keeps the last known position.
+        if (
+          lastLocationRef.current !== null &&
+          error.code !== GeolocationPositionError.PERMISSION_DENIED
+        ) {
+          return;
+        }
+
         const messages: Record<number, string> = {
           [GeolocationPositionError.PERMISSION_DENIED]: options.t(
             'geolocation.permissionDenied',
@@ -226,6 +258,8 @@ export function useMapViewControls(
           ),
         };
 
+        stopWatching();
+        lastLocationRef.current = null;
         setLocationStatus('error');
         showTemporaryLocationMessage(
           messages[error.code] ?? options.t('geolocation.error'),
@@ -233,8 +267,8 @@ export function useMapViewControls(
       },
       {
         enableHighAccuracy: true,
-        timeout: 10_000,
-        maximumAge: 30_000,
+        timeout: 20_000,
+        maximumAge: 10_000,
       },
     );
   }, [
@@ -243,6 +277,16 @@ export function useMapViewControls(
     options.t,
     showTemporaryLocationMessage,
   ]);
+
+  useEffect(
+    () => () => {
+      if (locationWatchIdRef.current !== null) {
+        navigator.geolocation?.clearWatch(locationWatchIdRef.current);
+        locationWatchIdRef.current = null;
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     options.mapRuntimeRef.current?.setBaseMapStyle(baseMapStyle);

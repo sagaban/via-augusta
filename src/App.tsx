@@ -15,7 +15,10 @@ import LocationSearch from './components/LocationSearch';
 import MapPositionPanel from './components/MapPositionPanel';
 import RouteImportControl from './components/RouteImportControl';
 import RouteControls from './components/RouteControls';
-import RouteExportDialog from './components/RouteExportDialog';
+import RouteExportDialog, {
+  type OfflineSaveOption,
+} from './components/RouteExportDialog';
+import SavedRoutesDialog from './components/SavedRoutesDialog';
 import RouteStatistics from './components/RouteStatistics';
 import {
   createNamedImportedGpxDocument,
@@ -60,6 +63,14 @@ import {
   updateSearchResultMarker,
 } from './map/searchResult';
 import { useItineraryMetrics } from './metrics/useItineraryMetrics';
+import { listSavedRoutes } from './offline/offlineStore';
+import {
+  isOfflineStorageSupported,
+  loadSavedRouteFile,
+  removeSavedRoute,
+  saveRouteOffline,
+} from './offline/savedRoutes';
+import { useOfflineMapZoomLimit } from './offline/useOfflineMapZoomLimit';
 import type { RouteElevationSummary } from './metrics/routeMetrics';
 import type { LocationSearchResult } from './search/locationSearch';
 import {
@@ -131,6 +142,8 @@ export default function App() {
       return shouldShowCurrentRelease();
     });
   const [isRouteExportDialogOpen, setIsRouteExportDialogOpen] =
+    useState(false);
+  const [isSavedRoutesDialogOpen, setIsSavedRoutesDialogOpen] =
     useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isMobileMapUiHidden, setIsMobileMapUiHidden] = useState(false);
@@ -576,6 +589,51 @@ export default function App() {
     isRouteOperationPending,
   });
 
+  const isOffline = useOfflineMapZoomLimit(mapRuntimeRef, status);
+
+  /** Offline storage for the itinerary named in the export dialog. */
+  const offlineSaveOption: OfflineSaveOption | null = isOfflineStorageSupported()
+    ? {
+        blockedReason:
+          routeExportSource === 'editable' && routeElevationStatus === 'loading'
+            ? t('offline.saveNeedsElevation')
+            : null,
+        save: (routeName, signal, onProgress) =>
+          saveRouteOffline(
+            {
+              name: routeName,
+              gpx: createCurrentRouteGpxDocument(routeName),
+              segments: activeRouteSegments,
+              distanceMeters: routeDistanceMeters,
+              baseMapStyle,
+            },
+            signal,
+            onProgress,
+          ),
+      }
+    : null;
+
+  /** Opens one saved route through the normal read-only GPX import flow. */
+  const openSavedRoute = useCallback(
+    async (id: string) => {
+      try {
+        const saved = await loadSavedRouteFile(id);
+
+        if (!saved) {
+          return;
+        }
+
+        setIsSavedRoutesDialogOpen(false);
+        setBaseMapStyle(saved.route.baseMapStyle);
+        await importRouteFile(saved.file);
+      } catch (error) {
+        console.error('Unable to open the saved route.', error);
+        showTemporaryRouteMessage(t('offline.loadError'), 'error');
+      }
+    },
+    [importRouteFile, setBaseMapStyle, showTemporaryRouteMessage, t],
+  );
+
   /** Opens project information after dismissing any map-feature popup behind it. */
   const openAboutDialog = useCallback(() => {
     closeMapPositionInspection();
@@ -838,6 +896,24 @@ export default function App() {
           onSelectFile={importRouteFile}
         />
 
+        {isOfflineStorageSupported() && (
+          <button
+            type="button"
+            className="map-control-button map-control-button--saved-routes"
+            aria-label={t('offline.list')}
+            title={t('offline.list')}
+            onClick={() => {
+              closeTransientMapInformation();
+              setIsSavedRoutesDialogOpen(true);
+            }}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M6.5 3.5h11v17L12 16.5l-5.5 4Z" />
+              <path d="M12 7v5.5M9.6 10.2 12 12.6l2.4-2.4" />
+            </svg>
+          </button>
+        )}
+
 
         <MapLayersSelector
           baseMapStyle={baseMapStyle}
@@ -1019,7 +1095,22 @@ export default function App() {
         defaultName={routeExportDefaultName}
         onCancel={() => setIsRouteExportDialogOpen(false)}
         onExportGpx={exportRoute}
+        offlineSave={offlineSaveOption}
       />
+
+      <SavedRoutesDialog
+        isOpen={isSavedRoutesDialogOpen}
+        onClose={() => setIsSavedRoutesDialogOpen(false)}
+        loadRoutes={listSavedRoutes}
+        onOpenRoute={(id) => void openSavedRoute(id)}
+        onDeleteRoute={removeSavedRoute}
+      />
+
+      {isOffline && (
+        <div className="offline-notice" role="status">
+          {t('offline.offlineNotice')}
+        </div>
+      )}
 
       {status === 'loading' && (
         <div className="status-card" role="status">

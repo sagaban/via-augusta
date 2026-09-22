@@ -9,6 +9,7 @@ import 'ol/ol.css';
 import './styles.css';
 import App from './App';
 import { I18nProvider } from './i18n/I18nContext';
+import { registerOfflineServiceWorker } from './offline/serviceWorker';
 
 const rootElement = document.getElementById('root');
 
@@ -23,3 +24,5 @@ createRoot(rootElement).render(
     </I18nProvider>
   </StrictMode>,
 );
+
+registerOfflineServiceWorker();
