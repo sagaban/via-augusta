@@ -24,6 +24,7 @@ import {
 import type { MapRuntime } from './mapRuntime';
 import { fromWgs84 } from './projection';
 import { updateUserLocationMarker } from './userLocation';
+import { useScreenWakeLock } from './useScreenWakeLock';
 
 /** Browser geolocation state used by the location control and its feedback. */
 export type LocationStatus = 'idle' | 'locating' | 'located' | 'error';
@@ -110,6 +111,9 @@ export function useMapViewControls(
   const [locationStatus, setLocationStatus] =
     useState<LocationStatus>('idle');
   const [locationMessage, setLocationMessage] = useState('');
+
+  // While the position is tracked the hiker is following the map: keep it lit.
+  useScreenWakeLock(locationStatus === 'located');
 
   const clearLocationMessageTimer = useCallback(() => {
     if (locationMessageTimerRef.current !== null) {
