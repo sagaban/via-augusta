@@ -2293,3 +2293,13 @@ select {
 .saved-routes-save-current {
   margin-bottom: 1rem;
 }
+
+.route-export-dialog-button--secondary:hover:not(:disabled) {
+  background: #eef3fb;
+  color: #17212b;
+}
+
+.route-export-dialog-button--secondary:disabled {
+  color: #7a8793;
+  background: #f4f6f8;
+}
