@@ -1,0 +1,65 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "docs/**"
+      - "README.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run regression tests
+        run: npm test
+
+      - name: Check published public-transport stop catalog
+        if: vars.VITE_PUBLIC_TRANSPORT_STOPS_CATALOG_URL != ''
+        run: curl -fsS --compressed -o /dev/null "${{ vars.VITE_PUBLIC_TRANSPORT_STOPS_CATALOG_URL }}"
+
+      - name: Build application
+        run: npm run build
+        env:
+          VITE_ROUTING_DATA_BASE_URL: ${{ vars.VITE_ROUTING_DATA_BASE_URL }}
+          VITE_SWISSTOPO_SHARE_SERVICE_URL: ${{ vars.VITE_SWISSTOPO_SHARE_SERVICE_URL }}
+          VITE_PUBLIC_TRANSPORT_STOPS_CATALOG_URL: ${{ vars.VITE_PUBLIC_TRANSPORT_STOPS_CATALOG_URL }}
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

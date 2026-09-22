@@ -1,0 +1,2979 @@
+/*
+ * Business context: defines the map-centred visual shell shared by desktop and
+ * responsive phone layouts. Mobile rules deliberately keep the map visible and
+ * reuse the same application state rather than introducing a separate mobile UI;
+ * temporary panels may cover map controls, but route planning remains desktop-first.
+ */
+:root {
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  color: #17212b;
+  background: #eef2f4;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #eef2f4;
+  /* The document itself never scrolls. Native panning remains available to
+     temporary scrollable panels, while browser-level pinch zoom is excluded. */
+  touch-action: pan-x pan-y;
+}
+
+.app:fullscreen {
+  width: 100vw;
+  height: 100vh;
+}
+
+.map {
+  position: absolute;
+  inset: 0;
+  background: #e7ecef;
+  /* Via Helvetica is a full-screen map, so OpenLayers rather than the browser
+     owns one-finger panning and two-finger zooming over the map canvas. */
+  touch-action: none;
+}
+
+.app--route-creation .map,
+.app--route-creation .ol-viewport {
+  cursor: crosshair;
+}
+
+.app--route-creation .map--route-waypoint-hover,
+.app--route-creation .map--route-waypoint-hover .ol-viewport,
+.app--route-creation .map--route-segment-hover,
+.app--route-creation .map--route-segment-hover .ol-viewport {
+  cursor: pointer;
+}
+
+.app--route-creation .map--route-edit-dragging,
+.app--route-creation .map--route-edit-dragging .ol-viewport {
+  cursor: grabbing;
+}
+
+.app--route-busy .map,
+.app--route-busy .ol-viewport {
+  cursor: progress;
+}
+
+.route-context-hint {
+  position: absolute;
+  z-index: 24;
+  max-width: min(24rem, calc(100vw - 1.5rem));
+  padding: 0.42rem 0.62rem;
+  border: 1px solid rgb(255 255 255 / 28%);
+  border-radius: 3px;
+  color: #ffffff;
+  background: rgb(16 20 24 / 94%);
+  box-shadow: 0 3px 10px rgb(0 0 0 / 30%);
+  font-size: 0.82rem;
+  line-height: 1.3;
+  pointer-events: none;
+  text-align: center;
+  transform: translate(-50%, calc(-100% - 0.75rem));
+}
+
+.route-context-hint--below {
+  transform: translate(-50%, 0.75rem);
+}
+
+.location-search {
+  position: absolute;
+  z-index: 20;
+  top: 1rem;
+  left: 1rem;
+  width: min(23rem, calc(100vw - 7rem));
+}
+
+/* The close action belongs only to the full-screen narrow-screen search surface. */
+.location-search-mobile-close {
+  display: none;
+}
+
+.location-search-field {
+  display: flex;
+  height: 3rem;
+  align-items: center;
+  border: 1px solid rgb(32 47 60 / 25%);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 18%);
+  backdrop-filter: blur(8px);
+}
+
+.location-search-field:focus-within {
+  border-color: rgb(23 105 224 / 60%);
+  box-shadow:
+    0 3px 12px rgb(0 0 0 / 18%),
+    0 0 0 3px rgb(23 105 224 / 18%);
+}
+
+.location-search-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  margin-left: 0.85rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: #52606b;
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+
+.location-search input {
+  min-width: 0;
+  height: 100%;
+  flex: 1;
+  padding: 0 0.7rem;
+  border: 0;
+  outline: 0;
+  color: #17212b;
+  background: transparent;
+}
+
+.location-search input::placeholder {
+  color: #687580;
+}
+
+.location-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.location-search-clear {
+  width: 2.65rem;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0 10px 10px 0;
+  color: #5c6872;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.location-search-clear:hover {
+  color: #17212b;
+  background: rgb(32 47 60 / 7%);
+}
+
+.location-search-clear:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 40%);
+  outline-offset: -3px;
+}
+
+.location-search-panel {
+  margin-top: 0.45rem;
+  overflow: hidden;
+  border: 1px solid rgb(32 47 60 / 20%);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 97%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
+  backdrop-filter: blur(10px);
+}
+
+.location-search-results {
+  max-height: min(24rem, calc(100vh - 5.5rem));
+  margin: 0;
+  padding: 0.35rem 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.location-search-result {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.72rem 0.85rem;
+  border: 0;
+  color: #17212b;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.location-search-result:hover,
+.location-search-result--active {
+  background: rgb(23 105 224 / 10%);
+}
+
+.location-search-result:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 40%);
+  outline-offset: -3px;
+}
+
+.location-search-result-icon {
+  width: 1.45rem;
+  height: 1.45rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: #52606b;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.location-search-result-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.location-search-result-text strong {
+  overflow: hidden;
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.location-search-result-text span {
+  color: #67737d;
+  font-size: 0.8rem;
+}
+
+.location-search-status {
+  padding: 0.9rem 1rem;
+  color: #59656f;
+  font-size: 0.88rem;
+}
+
+.location-search-status--error {
+  color: #a33636;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.map-controls {
+  position: absolute;
+  /* Transient control menus must cover bottom itinerary panels when narrow
+     viewports force both regions to overlap. */
+  z-index: 26;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 0.85rem;
+  /* The toolbar grows to the width of the route actions. Its transparent box
+     must not block map dragging between or below the visible controls. */
+  pointer-events: none;
+}
+
+.map-controls button,
+.map-controls select,
+.map-controls .map-layers-menu {
+  pointer-events: auto;
+}
+
+.route-controls,
+.route-action-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.route-controls {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.route-action-controls {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  max-width: min(29rem, calc(100vw - 5.5rem));
+}
+
+.route-import-control,
+.map-layers-selector {
+  position: relative;
+}
+
+.map-layers-menu {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 0.5rem);
+  width: 18rem;
+  max-width: calc(100vw - 5.5rem);
+  max-height: calc(100vh - 2rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0.4rem;
+  border: 1px solid rgb(32 47 60 / 22%);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 97%);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 20%);
+  backdrop-filter: blur(8px);
+}
+
+.map-layers-section {
+  margin: 0;
+  padding: 0;
+}
+
+/* The mobile layer selector becomes a bottom sheet at phone widths. Its
+   dedicated header stays out of the desktop popover to preserve the compact
+   large-screen workflow. */
+.map-layers-mobile-header {
+  display: none;
+}
+
+/* Language and About stay directly accessible on large screens. The same
+   infrequently used actions move inside the mobile map/options sheet only
+   where permanent map space is scarce. */
+.map-layers-section--language,
+.map-layers-about-action {
+  display: none;
+}
+
+.map-layers-section--overlays {
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgb(32 47 60 / 12%);
+}
+
+.map-layers-section-title {
+  margin: 0;
+  padding: 0.35rem 0.45rem 0.25rem;
+  color: #66727d;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.map-layer-option {
+  display: grid;
+  width: 100%;
+  min-height: 2.75rem;
+  grid-template-columns: 2.15rem minmax(0, 1fr) 1.75rem;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.35rem 0.45rem;
+  border: 0;
+  border-radius: 7px;
+  color: #17212b;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.map-layer-option:hover,
+.map-layer-option--selected,
+.map-layer-control:hover,
+.map-layer-control--selected {
+  background: rgb(23 105 224 / 10%);
+}
+
+.map-layer-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2.35rem;
+  border-radius: 7px;
+}
+
+.map-layer-control .map-layer-option:hover {
+  background: transparent;
+}
+
+.map-layer-option--overlay {
+  min-height: 3rem;
+  grid-template-columns: minmax(0, 1fr) 1.75rem;
+  padding-left: 0.65rem;
+  border-radius: 7px 0 0 7px;
+}
+
+.map-layer-opacity-button {
+  display: grid;
+  width: 2.35rem;
+  min-height: 3rem;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 0 7px 7px 0;
+  color: #53606b;
+  background: transparent;
+  cursor: pointer;
+}
+
+.map-layer-opacity-button:hover,
+.map-layer-opacity-button--open {
+  color: #1769e0;
+  background: rgb(23 105 224 / 10%);
+}
+
+.map-layer-opacity-button:disabled,
+.map-layer-opacity-button:disabled:hover {
+  color: #a7afb6;
+  background: transparent;
+  cursor: default;
+  opacity: 1;
+}
+
+.map-layer-opacity-button:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 40%);
+  outline-offset: -3px;
+}
+
+.map-layer-opacity-button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: currentcolor;
+  stroke: none;
+}
+
+.map-layer-opacity-settings {
+  display: grid;
+  min-height: 2.55rem;
+  grid-column: 1 / -1;
+  grid-template-columns: auto minmax(4.5rem, 1fr) 3rem;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.35rem 0.65rem 0.55rem;
+  border-top: 1px solid rgb(32 47 60 / 10%);
+  color: #53606b;
+  font-size: 0.78rem;
+}
+
+.map-layer-opacity-settings input[type='range'] {
+  width: 100%;
+  margin: 0;
+  accent-color: #1769e0;
+  cursor: pointer;
+}
+
+.map-layer-opacity-value {
+  justify-self: end;
+  color: #17212b;
+  font-variant-numeric: tabular-nums;
+}
+
+.map-layer-option:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 40%);
+  outline-offset: -3px;
+}
+
+.base-map-option-preview {
+  width: 2.15rem;
+  height: 1.65rem;
+  border: 1px solid rgb(32 47 60 / 25%);
+  border-radius: 4px;
+}
+
+.base-map-option-preview {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 20%);
+}
+
+.base-map-option-preview--color {
+  background-image: url('/base-map-previews/color.png');
+}
+
+.base-map-option-preview--gray {
+  background-image: url('/base-map-previews/gray.png');
+}
+
+.base-map-option-preview--aerial {
+  background-image: url('/base-map-previews/aerial.png');
+}
+
+.map-layer-option-check {
+  width: 1.2rem;
+  height: 1.2rem;
+  justify-self: center;
+  fill: none;
+  stroke: #1769e0;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.4;
+}
+
+.map-layer-option-toggle {
+  position: relative;
+  width: 1.75rem;
+  height: 1rem;
+  justify-self: center;
+  border-radius: 999px;
+  background: #b7bec4;
+  transition: background 150ms ease;
+}
+
+.map-layer-option-toggle span {
+  position: absolute;
+  top: 0.125rem;
+  left: 0.125rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
+  transition: transform 150ms ease;
+}
+
+.map-layer-option-toggle--checked {
+  background: #1769e0;
+}
+
+.map-layer-option-toggle--checked span {
+  transform: translateX(0.75rem);
+}
+
+.zoom-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.map-control-button {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgb(32 47 60 / 25%);
+  border-radius: 9px;
+  color: #17212b;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 18%);
+  cursor: pointer;
+  user-select: none;
+  backdrop-filter: blur(8px);
+}
+
+.map-control-button:hover {
+  background: #ffffff;
+}
+
+/* Desktop keeps the permanent search field; the compact search button is mobile-only. */
+.map-control-button--search {
+  display: none;
+}
+
+.about-button {
+  position: fixed;
+  z-index: 21;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  flex: 0 0 auto;
+}
+
+.language-selector {
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border: 1px solid rgb(32 47 60 / 25%);
+  border-radius: 9px;
+  outline: 0;
+  color: #17212b;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 18%);
+  cursor: pointer;
+  appearance: none;
+  text-align: center;
+  text-align-last: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  user-select: none;
+  backdrop-filter: blur(8px);
+}
+
+.language-selector:hover {
+  background: #ffffff;
+}
+
+.language-selector:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 45%);
+  outline-offset: 2px;
+}
+
+
+.map-control-button:active {
+  box-shadow: 0 1px 5px rgb(0 0 0 / 20%);
+  transform: translateY(1px);
+}
+
+.map-control-button:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 45%);
+  outline-offset: 2px;
+}
+
+.map-control-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.map-control-button--location:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.map-control-button--zoom {
+  font-size: 1.85rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.about-button svg,
+.map-control-button--location svg,
+.map-control-button--fullscreen svg,
+.map-control-button--map-layers svg,
+.map-control-button--route-import svg,
+.map-control-button--route-export svg,
+.map-control-button--search svg,
+.map-control-button--route-action svg,
+.map-control-button--route-toggle svg {
+  width: 1.55rem;
+  height: 1.55rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.map-control-button--location .location-icon-center {
+  fill: currentcolor;
+  stroke: none;
+}
+
+.map-control-button--route-active,
+.map-control-button--menu-open {
+  border-color: #1769e0;
+  color: #ffffff;
+  background: #1769e0;
+}
+
+.map-control-button--route-active:hover,
+.map-control-button--menu-open:hover {
+  background: #125ac2;
+}
+
+
+.map-control-button--route-toggle {
+  position: relative;
+}
+
+.map-control-button--route-loading::after {
+  position: absolute;
+  right: 0.28rem;
+  bottom: 0.28rem;
+  width: 0.68rem;
+  height: 0.68rem;
+  border: 2px solid currentcolor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  content: '';
+  animation: route-loading-spin 700ms linear infinite;
+}
+
+@keyframes route-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.map-control-button--route-action:disabled,
+.map-control-button--route-export:disabled {
+  border-color: #d4d4cf;
+  color: #9b9b96;
+  background: #ecece8;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 10%);
+  cursor: default;
+  opacity: 1;
+}
+
+.map-control-button--route-action:disabled:hover,
+.map-control-button--route-export:disabled:hover {
+  background: #ecece8;
+}
+
+/*
+ * A pending route request temporarily disables the snap control, but its blue
+ * pressed state must remain visible so disabled is not mistaken for switched off.
+ */
+.map-control-button--route-action.map-control-button--route-active:disabled,
+.map-control-button--route-action.map-control-button--route-active:disabled:hover {
+  border-color: #1769e0;
+  color: #ffffff;
+  background: #1769e0;
+  cursor: default;
+}
+
+.map-control-button--active {
+  color: #1769e0;
+  border-color: rgb(23 105 224 / 55%);
+  background: rgb(23 105 224 / 8%);
+}
+
+.location-message {
+  position: absolute;
+  top: 11.15rem;
+  right: 3.7rem;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 5.5rem));
+  padding: 0.65rem 0.8rem;
+  border: 1px solid rgb(32 47 60 / 20%);
+  border-radius: 8px;
+  color: #26333d;
+  background: rgb(255 255 255 / 95%);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 16%);
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.location-message--error {
+  border-color: rgb(185 55 55 / 55%);
+}
+
+.map-information-popup {
+  position: absolute;
+  z-index: 30;
+  top: 5rem;
+  left: 1rem;
+  width: min(23rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 6rem);
+  overflow: hidden;
+  border: 1px solid rgb(32 47 60 / 22%);
+  border-radius: 10px;
+  color: #17212b;
+  background: rgb(255 255 255 / 98%);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 22%);
+  backdrop-filter: blur(10px);
+}
+
+.map-information-popup-header {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0.75rem 0.6rem 1rem;
+  border-bottom: 1px solid rgb(32 47 60 / 14%);
+  font-size: 1rem;
+}
+
+.map-information-popup-close {
+  display: grid;
+  width: 2.15rem;
+  height: 2.15rem;
+  flex: 0 0 auto;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  color: #b71919;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.8rem;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.map-information-popup-close:hover {
+  background: rgb(183 25 25 / 9%);
+}
+
+.map-information-popup-close:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 40%);
+  outline-offset: 1px;
+}
+
+.map-information-popup-body {
+  max-height: calc(100vh - 9rem);
+  padding: 1rem;
+  overflow-y: auto;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.map-information-popup-body > p {
+  margin: 0;
+  color: #5c6872;
+}
+
+.public-transport-stop-popup {
+  width: fit-content;
+  min-width: 23rem;
+  max-width: min(29rem, calc(100vw - 2rem));
+}
+
+.public-transport-stop-popup .map-information-popup-header {
+  align-items: flex-start;
+  /* Timetable rows, not a long stop name, determine intrinsic popup width. */
+  contain: inline-size;
+}
+
+.public-transport-stop-heading {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.4rem;
+  line-height: 1.35;
+}
+
+.public-transport-stop-heading strong {
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+
+.public-transport-stop-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.public-transport-stop-modes img {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: 0 0 auto;
+}
+
+.map-information-choice-summary {
+  position: absolute;
+  z-index: 30;
+  bottom: 1rem;
+  left: 50%;
+  display: flex;
+  width: min(36rem, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  transform: translateX(-50%);
+}
+
+.map-information-choice-panel {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgb(32 47 60 / 22%);
+  border-radius: 10px;
+  color: #17212b;
+  background: rgb(255 255 255 / 97%);
+  box-shadow: 0 4px 18px rgb(0 0 0 / 22%);
+  backdrop-filter: blur(8px);
+}
+
+.map-information-choice-panel-header {
+  display: flex;
+  min-height: 3.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.75rem 0.7rem 1rem;
+}
+
+.map-information-choice-heading {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.4rem;
+  line-height: 1.35;
+}
+
+.map-information-choice-heading strong {
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+
+.map-information-choice-close {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  flex: 0 0 auto;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  color: #b71919;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.9rem;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.map-information-choice-close:hover {
+  background: rgb(183 25 25 / 9%);
+}
+
+.map-information-choice-close:focus-visible,
+.map-information-choice:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 40%);
+  outline-offset: 1px;
+}
+
+.map-information-choice-content {
+  padding: 0 1rem 1rem;
+  border-top: 1px solid rgb(32 47 60 / 13%);
+}
+
+.map-information-choice-hint {
+  margin: 0.75rem 0;
+  color: #52606b;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.map-information-choices {
+  display: grid;
+  max-height: min(15rem, calc(100vh - 13rem));
+  gap: 0.45rem;
+  overflow-y: auto;
+}
+
+.map-information-choice {
+  display: flex;
+  width: 100%;
+  min-height: 2.8rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgb(32 47 60 / 16%);
+  border-radius: 8px;
+  color: #17212b;
+  background: rgb(23 105 224 / 6%);
+  font: inherit;
+  font-weight: 650;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+
+.map-information-choice:hover {
+  background: rgb(23 105 224 / 12%);
+}
+
+/* A map click can legitimately match several information layers. Keep the
+   temporary chooser grouped by product meaning rather than by provider call. */
+.map-information-choice-group {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.map-information-choice-group + .map-information-choice-group {
+  margin-top: 0.8rem;
+}
+
+.map-information-choice-group h2 {
+  margin: 0;
+  color: #52606b;
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+}
+
+.map-information-choice-icon {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 7px;
+}
+
+.map-information-choice-icon img {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.map-information-choice-icon--closure,
+.map-information-choice-icon--danger,
+.map-information-choice-icon--transport {
+  background: transparent;
+}
+
+.map-information-choice-icon--closure img,
+.map-information-choice-icon--danger img,
+.map-information-choice-icon--transport img {
+  width: 1.55rem;
+  height: 1.55rem;
+}
+
+.map-information-choice-icon--hiking {
+  color: #287a3b;
+  background: rgb(40 122 59 / 10%);
+}
+
+.map-information-choice-icon--hiking img {
+  width: 1.55rem;
+  height: 1.55rem;
+}
+
+.map-information-choice-label {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.map-information-choice strong {
+  overflow-wrap: anywhere;
+}
+
+.map-information-choice-subtitle {
+  color: #52606b;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+/* Desktop right-click inspection uses the same temporary lower-map language as
+   ambiguity choices, but remains narrower because it contains only one point. */
+.map-position-summary {
+  position: absolute;
+  z-index: 30;
+  bottom: 1rem;
+  left: 50%;
+  display: flex;
+  width: min(24rem, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  transform: translateX(-50%);
+}
+
+.map-position-content {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.8rem 1rem 1rem;
+  border-top: 1px solid rgb(32 47 60 / 13%);
+}
+
+.map-position-row {
+  display: grid;
+  grid-template-columns: 2.35rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.map-position-copy {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  color: #1769e0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.map-position-copy:hover {
+  background: rgb(23 105 224 / 9%);
+}
+
+.map-position-copy:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 40%);
+  outline-offset: 1px;
+}
+
+.map-position-copy svg {
+  width: 1.55rem;
+  height: 1.55rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.map-position-altitude-icon {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  color: #17212b;
+}
+
+.map-position-altitude-icon svg {
+  width: 1.8rem;
+  height: 1.8rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.map-position-value {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.08rem;
+  line-height: 1.3;
+}
+
+.map-position-value span {
+  color: #52606b;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.map-position-value strong {
+  overflow-wrap: anywhere;
+  color: #17212b;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.public-transport-departures {
+  margin-bottom: 1rem;
+}
+
+.public-transport-departures h2 {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.public-transport-departures-status {
+  margin: 0;
+  color: #5c6872;
+}
+
+.public-transport-departure-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.public-transport-departure-group h3 {
+  margin: 0;
+  color: #17212b;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+/* Shared tracks size the line badge from the widest visible label across all rows. */
+.public-transport-departure-list {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) 3.15rem;
+  column-gap: 0.35rem;
+  margin: 0.25rem 0 0;
+  padding: 0 0.75rem 0 0;
+  list-style: none;
+}
+
+.public-transport-departure-list--with-delay {
+  grid-template-columns: max-content minmax(0, 1fr) 3.15rem 3.5rem;
+}
+
+.public-transport-departure-list li {
+  display: grid;
+  min-height: 2.65rem;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  border-bottom: 1px solid rgb(32 47 60 / 11%);
+}
+
+.public-transport-departure-list li:first-child {
+  border-top: 1px solid rgb(32 47 60 / 11%);
+}
+
+.public-transport-departure-line {
+  box-sizing: border-box;
+  min-width: 3.5rem;
+  max-width: 5.5rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 5px;
+  color: #17212b;
+  background: rgb(23 105 224 / 10%);
+  font-size: 0.84rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-transport-departure-destination {
+  min-width: 0;
+  margin-left: 0.15rem;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-transport-departure-time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.public-transport-departure-time--delayed {
+  color: #ff0000;
+}
+
+.public-transport-departure-delay {
+  color: #ff0000;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.public-transport-stop-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  /* Timetable content, not the fixed action labels, determines popup width. */
+  contain: inline-size;
+}
+
+.public-transport-stop-links a {
+  display: flex;
+  min-height: 2.65rem;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgb(32 47 60 / 16%);
+  border-radius: 8px;
+  color: #1769e0;
+  background: rgb(23 105 224 / 6%);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.public-transport-stop-links a:hover {
+  background: rgb(23 105 224 / 11%);
+}
+
+.public-transport-stop-links a:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 40%);
+  outline-offset: 2px;
+}
+
+.public-transport-stop-links svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.map-information-popup-error {
+  color: #a33636 !important;
+}
+
+.map-information-popup-content .htmlpopup-header {
+  margin-bottom: 0.85rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.map-information-popup-content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.map-information-popup-content td,
+.map-information-popup-content th {
+  padding: 0.45rem 0;
+  vertical-align: top;
+  border-bottom: 1px solid rgb(32 47 60 / 10%);
+  text-align: left;
+}
+
+.map-information-popup-content .cell-left,
+.map-information-popup-content th {
+  width: 38%;
+  padding-right: 0.8rem;
+  color: #3f4c56;
+  font-weight: 650;
+}
+
+.map-information-popup-content p:first-child,
+.map-information-popup-content div:first-child {
+  margin-top: 0;
+}
+
+.map-information-popup-content p:last-child,
+.map-information-popup-content div:last-child {
+  margin-bottom: 0;
+}
+
+.map-information-popup-content a {
+  color: #1769e0;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+/* GeoAdmin can split shooting dates, times, and PDF links across adjacent
+   inline/table nodes with no reliable visible whitespace after sanitization.
+   Project-owned spacing keeps the official content readable without changing
+   the source values, while the complete time range may wrap as one unit. */
+.map-information-popup-content .shooting-notice-date {
+  margin-inline-start: 0.3em;
+}
+
+.map-information-popup-content .shooting-time-range {
+  display: inline-block;
+  margin-inline-start: 0.3em;
+  white-space: nowrap;
+}
+
+.map-information-popup-content .shooting-notice-pdf-link {
+  display: inline-block;
+  margin-inline-start: 0.65rem;
+  white-space: nowrap;
+}
+
+.map-information-popup-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* The selected public route occupies the same lower map region as the
+   itinerary summary. Its optional profile expands upward so the compact panel
+   remains anchored and no second bottom overlay competes for map space. */
+.switzerland-mobility-hiking-summary {
+  position: absolute;
+  z-index: 25;
+  bottom: 1rem;
+  left: 50%;
+  display: flex;
+  width: min(50rem, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  flex-direction: column;
+  gap: 0.45rem;
+  transform: translateX(-50%);
+}
+
+.switzerland-mobility-hiking-panel {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgb(32 47 60 / 22%);
+  border-radius: 10px;
+  color: #17212b;
+  background: rgb(255 255 255 / 97%);
+  box-shadow: 0 4px 18px rgb(0 0 0 / 22%);
+  backdrop-filter: blur(8px);
+}
+
+
+.switzerland-mobility-hiking-panel-header {
+  display: flex;
+  min-height: 3.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.75rem 0.7rem 1rem;
+}
+
+.switzerland-mobility-hiking-panel-heading {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.18rem;
+  line-height: 1.3;
+}
+
+.switzerland-mobility-hiking-panel-heading strong,
+.switzerland-mobility-hiking-panel-heading span {
+  overflow-wrap: anywhere;
+}
+
+.switzerland-mobility-hiking-panel-heading strong {
+  font-size: 1rem;
+}
+
+.switzerland-mobility-hiking-panel-heading span {
+  color: #52606b;
+  font-size: 0.9rem;
+}
+
+.switzerland-mobility-hiking-panel-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.switzerland-mobility-hiking-panel-close {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  flex: 0 0 auto;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  color: #b71919;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.9rem;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.switzerland-mobility-hiking-panel-close:hover {
+  background: rgb(183 25 25 / 9%);
+}
+
+.switzerland-mobility-hiking-panel-close:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 40%);
+  outline-offset: 1px;
+}
+
+.switzerland-mobility-hiking-panel-status {
+  margin: 0;
+  padding: 0 1rem 0.9rem;
+  color: #52606b;
+  font-size: 0.9rem;
+}
+
+.switzerland-mobility-hiking-panel-status--error,
+.switzerland-mobility-hiking-elevation-error {
+  color: #a33636;
+}
+
+.switzerland-mobility-hiking-metrics {
+  display: grid;
+  min-height: 3.2rem;
+  grid-template-columns: minmax(0, 1fr) 3.5rem;
+  border-top: 1px solid rgb(32 47 60 / 13%);
+  font-size: 0.96rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.switzerland-mobility-hiking-metric-values {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* Public-route figures use the same four balanced columns as editable and
+   imported itineraries so switching information sources does not shift the
+   visual hierarchy of the bottom bar. */
+.switzerland-mobility-hiking-metric-values .route-statistics-item {
+  padding-block: 0.75rem;
+}
+
+/* The profile action is part of the metrics bar, but keeps the same icon and
+   active-state language as editable and imported itineraries. */
+.switzerland-mobility-hiking-profile-toggle {
+  width: 100%;
+  min-height: 3.2rem;
+}
+
+.switzerland-mobility-hiking-elevation-error {
+  grid-column: 1 / -1;
+  padding: 0.45rem 0.75rem;
+  border-top: 1px solid rgb(32 47 60 / 10%);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Position inspection temporarily owns the lower map area, but the itinerary
+   summaries stay mounted so local UI state such as an expanded elevation
+   profile is restored unchanged when the inspection closes. */
+.app--map-position-inspection-open .route-summary,
+.app--map-position-inspection-open .switzerland-mobility-hiking-summary {
+  display: none;
+}
+
+.route-summary {
+  position: absolute;
+  z-index: 20;
+  bottom: 1rem;
+  left: 50%;
+  display: flex;
+  width: min(50rem, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  flex-direction: column;
+  gap: 0.45rem;
+  transform: translateX(-50%);
+}
+
+/* Keep the contextual GPX edit action aligned to the statistics bar rather
+   than to the fixed-size map controls beside the map. */
+.route-statistics-row {
+  position: relative;
+}
+
+.route-summary-edit-button {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(100% + 0.85rem);
+  width: 3.5rem;
+  height: auto;
+}
+
+.route-summary-edit-button img {
+  width: 1.6rem;
+  height: 1.6rem;
+  display: block;
+}
+
+
+.route-statistics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) 3.5rem;
+  overflow: hidden;
+  border: 1px solid rgb(32 47 60 / 20%);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 18%);
+  backdrop-filter: blur(8px);
+}
+
+.route-statistics-item {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  border-right: 1px solid rgb(32 47 60 / 12%);
+  white-space: nowrap;
+}
+
+.route-statistics-item span {
+  color: #65717b;
+  font-size: 0.9rem;
+}
+
+.route-statistics-item strong {
+  min-width: 2.5rem;
+  color: #17212b;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.route-statistics-direction-icon {
+  display: none;
+}
+
+.route-profile-toggle {
+  display: grid;
+  width: 3.5rem;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  color: #17212b;
+  background: transparent;
+  cursor: pointer;
+}
+
+.route-profile-toggle:hover {
+  background: rgb(23 105 224 / 8%);
+}
+
+.route-profile-toggle:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 45%);
+  outline-offset: -3px;
+}
+
+.route-profile-toggle:disabled {
+  color: #9b9b96;
+  background: #ecece8;
+  cursor: default;
+}
+
+.route-profile-toggle--active {
+  color: #ffffff;
+  background: #1769e0;
+}
+
+.route-profile-toggle--active:hover {
+  background: #125ac2;
+}
+
+.route-profile-toggle svg {
+  width: 1.8rem;
+  height: 1.8rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.route-elevation-profile {
+  width: 100%;
+  padding: 0.9rem 1rem 0.65rem;
+  border: 1px solid rgb(32 47 60 / 20%);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 97%);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 18%);
+  backdrop-filter: blur(8px);
+}
+
+.route-elevation-profile-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 0.35rem 0.4rem;
+}
+
+.route-elevation-profile-header strong {
+  color: #17212b;
+  font-size: 1.05rem;
+}
+
+.route-elevation-profile-header span {
+  color: #65717b;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.route-elevation-profile-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 8rem;
+  /* The chart owns one-finger exploration so horizontal touch movement keeps
+     delivering pointer events instead of becoming a native page gesture. */
+  touch-action: none;
+  user-select: none;
+}
+
+.route-elevation-profile-grid {
+  stroke: rgb(32 47 60 / 13%);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.route-elevation-profile-distance-grid {
+  stroke: rgb(32 47 60 / 9%);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.route-elevation-profile-axis-label,
+.route-elevation-profile-distance-label {
+  fill: #6a747d;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.route-elevation-profile-area {
+  fill: rgb(213 43 30 / 14%);
+  stroke: none;
+}
+
+.route-elevation-profile-line {
+  fill: none;
+  stroke: #d52b1e;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.route-elevation-profile-hit-area {
+  fill: transparent;
+  cursor: crosshair;
+  pointer-events: all;
+}
+
+.route-elevation-profile-hover {
+  pointer-events: none;
+}
+
+.route-elevation-profile-hover line {
+  stroke: rgb(23 33 43 / 58%);
+  stroke-dasharray: 4 3;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.route-elevation-profile-hover circle {
+  fill: #d52b1e;
+  stroke: #ffffff;
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.about-dialog {
+  width: min(40rem, calc(100vw - 2rem));
+  max-width: none;
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  color: #17212b;
+  background: transparent;
+  overflow: visible;
+}
+
+.about-dialog::backdrop {
+  background: rgb(20 29 37 / 48%);
+  backdrop-filter: blur(2px);
+}
+
+.about-dialog-panel {
+  display: flex;
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgb(32 47 60 / 22%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 99%);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 30%);
+}
+
+.about-dialog-header {
+  padding: 1.3rem 1.35rem 1rem;
+  border-bottom: 1px solid rgb(32 47 60 / 12%);
+}
+
+.about-dialog-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.about-dialog-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.about-dialog-tagline {
+  margin: 0.35rem 0 0;
+  color: #52616d;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.about-dialog-header h2:focus {
+  outline: none;
+}
+
+.about-dialog-icon-close:focus-visible,
+.about-dialog a:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 38%);
+  outline-offset: 2px;
+}
+
+.about-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 1.15rem 1.35rem 1.7rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.about-dialog-section h3,
+.about-dialog-notice h3 {
+  margin: 0 0 0.55rem;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.about-dialog-section p,
+.about-dialog-notice p {
+  margin: 0;
+  color: #3f4d58;
+  line-height: 1.55;
+}
+
+.about-dialog-section p + p {
+  margin-top: 0.65rem;
+}
+
+.about-dialog-notice {
+  padding: 0.85rem 0.95rem;
+  border: 1px solid rgb(190 128 0 / 28%);
+  border-radius: 9px;
+  background: rgb(255 246 218 / 72%);
+}
+
+.about-dialog-details,
+.about-dialog-credits {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.about-dialog-details > div,
+.about-dialog-credits > div {
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.8fr) minmax(0, 1.2fr);
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.about-dialog-details dt,
+.about-dialog-credits dt {
+  color: #55636e;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.about-dialog-details dd,
+.about-dialog-credits dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+.about-dialog a {
+  color: #125cb8;
+}
+
+.about-dialog-icon-close {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  color: #4f5d67;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.about-dialog-icon-close:hover {
+  color: #17212b;
+  background: rgb(32 47 60 / 8%);
+}
+
+.release-notes-dialog {
+  width: min(42rem, calc(100vw - 2rem));
+  max-width: none;
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  color: #17212b;
+  background: transparent;
+  overflow: visible;
+}
+
+.release-notes-dialog::backdrop {
+  background: rgb(20 29 37 / 48%);
+  backdrop-filter: blur(2px);
+}
+
+.release-notes-dialog-panel {
+  display: flex;
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgb(32 47 60 / 22%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 99%);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 30%);
+}
+
+.release-notes-dialog-header {
+  padding: 1.2rem 1.3rem 0.95rem;
+  border-bottom: 1px solid rgb(32 47 60 / 12%);
+}
+
+.release-notes-dialog-header h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.release-notes-dialog-header h2:focus {
+  outline: none;
+}
+
+.release-notes-dialog-content {
+  padding: 1rem 1.3rem 1.15rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.release-notes-list {
+  display: grid;
+  gap: 0.8rem;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.release-notes-list li {
+  padding-left: 0.15rem;
+  color: #3f4d58;
+  line-height: 1.48;
+}
+
+.release-notes-list strong {
+  color: #25333d;
+}
+
+.release-notes-dialog-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 0.85rem 1.3rem 1rem;
+  border-top: 1px solid rgb(32 47 60 / 12%);
+}
+
+.release-notes-dialog-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #125cb8;
+  font-weight: 600;
+}
+
+.release-notes-new-tab-icon {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.release-notes-dialog-close {
+  min-width: 6.5rem;
+  height: 2.65rem;
+  padding: 0 1rem;
+  border: 1px solid #1769e0;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #1769e0;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.release-notes-dialog-close:hover {
+  background: #125ac2;
+}
+
+.release-notes-dialog-close:focus-visible,
+.release-notes-dialog a:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 38%);
+  outline-offset: 2px;
+}
+
+.route-export-dialog {
+  width: min(31rem, calc(100vw - 2rem));
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  color: #17212b;
+  background: transparent;
+  overflow: visible;
+}
+
+.route-export-dialog::backdrop {
+  background: rgb(20 29 37 / 42%);
+  backdrop-filter: blur(2px);
+}
+
+.route-export-dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid rgb(32 47 60 / 22%);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 98%);
+  box-shadow: 0 14px 42px rgb(0 0 0 / 28%);
+}
+
+.route-export-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.2rem;
+}
+
+.route-export-dialog-form h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+
+.route-export-dialog-close {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  color: #4f5d67;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.route-export-dialog-close:hover {
+  color: #17212b;
+  background: rgb(32 47 60 / 8%);
+}
+
+.route-export-dialog-close:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 38%);
+  outline-offset: 2px;
+}
+
+.route-export-dialog-close:disabled {
+  color: #a7adb2;
+  background: transparent;
+  cursor: not-allowed;
+}
+
+.route-export-dialog-form label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.route-export-dialog-form input {
+  width: 100%;
+  height: 2.9rem;
+  padding: 0 0.8rem;
+  border: 1px solid rgb(32 47 60 / 30%);
+  border-radius: 8px;
+  outline: 0;
+  color: #17212b;
+  background: #ffffff;
+}
+
+.route-export-dialog-form input:focus {
+  border-color: rgb(23 105 224 / 70%);
+  box-shadow: 0 0 0 3px rgb(23 105 224 / 18%);
+}
+
+.route-export-dialog-form p {
+  margin: 0;
+  color: #64717b;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.route-export-dialog-options {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 0.45rem;
+}
+
+.route-export-dialog-swisstopo-option {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.route-export-dialog-button {
+  display: inline-flex;
+  width: 100%;
+  min-height: 3rem;
+  height: auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid #1769e0;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #1769e0;
+  cursor: pointer;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+  text-decoration: none;
+}
+
+.route-export-dialog-button:hover {
+  background: #125ac2;
+}
+
+.route-export-dialog-button:focus-visible {
+  outline: 3px solid rgb(23 105 224 / 38%);
+  outline-offset: 2px;
+}
+
+.route-export-dialog-button:disabled {
+  border-color: #c8ccd0;
+  color: #8a9299;
+  background: #e6e8ea;
+  cursor: not-allowed;
+}
+
+.route-export-dialog-form .route-export-dialog-storage-note {
+  display: flex;
+  gap: 0.45rem;
+  align-items: flex-start;
+  padding: 0 0.15rem;
+  color: #475569;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.route-export-dialog-share {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 12rem;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 0.2rem;
+  padding: 0.9rem;
+  border: 1px solid rgb(32 47 60 / 18%);
+  border-radius: 10px;
+  background: #f5f8fb;
+}
+
+.route-export-dialog-share-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+  color: #33414c;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.route-export-dialog-share-copy strong {
+  color: #17212b;
+  font-size: 0.95rem;
+}
+
+.route-export-dialog-qr {
+  display: block;
+  width: 12rem;
+  height: 12rem;
+  border: 1px solid rgb(32 47 60 / 18%);
+  background: #ffffff;
+}
+
+.route-export-dialog-form .route-export-dialog-error {
+  color: #b42318;
+  font-weight: 600;
+}
+
+@media (max-width: 36rem) {
+  .route-export-dialog {
+    width: min(100% - 1rem, 31rem);
+  }
+
+  .route-export-dialog-form {
+    padding: 1rem;
+  }
+
+  .route-export-dialog-share {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .route-export-dialog-share-copy {
+    align-items: center;
+    text-align: center;
+  }
+}
+
+.route-message {
+  position: absolute;
+  z-index: 22;
+  top: 4.75rem;
+  left: 50%;
+  width: max-content;
+  max-width: min(34rem, calc(100vw - 2rem));
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgb(32 47 60 / 20%);
+  border-radius: 8px;
+  color: #26333d;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 16%);
+  font-size: 0.86rem;
+  line-height: 1.35;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.route-message--error {
+  border-color: rgb(185 55 55 / 55%);
+  color: #8f2e2e;
+}
+
+.status-card {
+  position: absolute;
+  z-index: 10;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  max-width: min(420px, calc(100% - 2rem));
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 95%);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 18%);
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.status-card--error {
+  border: 1px solid #c94c4c;
+}
+
+.status-card span {
+  color: #53606b;
+  font-size: 0.9rem;
+}
+
+.ol-scale-bar {
+  left: 0.6rem;
+}
+
+/* On intermediate widths, reserve a right-side gutter for the contextual GPX
+   edit action instead of moving it above the summary. Keeping the action beside
+   the same row at every breakpoint prevents it from covering the elevation
+   profile when that panel is open. */
+@media (max-width: 60rem) {
+  .route-summary {
+    left: 1rem;
+    width: min(50rem, calc(100vw - 6.35rem));
+    max-width: calc(100vw - 6.35rem);
+    transform: none;
+  }
+}
+
+@media (max-width: 1140px) {
+  .about-button {
+    position: static;
+    right: auto;
+    bottom: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  /* Vertical space, rather than the reported pointer capabilities, is the
+     limiting factor on narrow screens. Hiding the redundant +/- pair keeps
+     the permanent right-side stack short enough to expose route controls. */
+  .zoom-controls {
+    display: none;
+  }
+
+  /* The bottom route summary occupies the scale bar's only useful position on
+     narrow screens. Hiding the decorative scale avoids a permanently obscured
+     control while preserving more map height than moving either element. */
+  .ol-scale-bar {
+    display: none;
+  }
+
+  /* Phone layouts recover the permanent search field's height. Search stays
+     one tap away in the right-side stack and temporarily owns the full usable
+     viewport only while the user is actively searching. */
+  .location-search {
+    display: none;
+  }
+
+  .location-search--mobile-open {
+    position: fixed;
+    z-index: 40;
+    inset: 0;
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    flex-direction: column;
+    padding: max(0.75rem, env(safe-area-inset-top))
+      max(0.75rem, env(safe-area-inset-right))
+      max(0.75rem, env(safe-area-inset-bottom))
+      max(0.75rem, env(safe-area-inset-left));
+    overflow: hidden;
+    background: #eef2f4;
+    overscroll-behavior: contain;
+  }
+
+  .location-search-mobile-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 2.85rem;
+    gap: 0.5rem;
+  }
+
+  .location-search-mobile-close {
+    display: grid;
+    width: 2.85rem;
+    height: 2.85rem;
+    padding: 0;
+    place-items: center;
+    border: 1px solid rgb(32 47 60 / 25%);
+    border-radius: 9px;
+    color: #17212b;
+    background: rgb(255 255 255 / 96%);
+    box-shadow: 0 3px 12px rgb(0 0 0 / 18%);
+    cursor: pointer;
+  }
+
+  .location-search-mobile-close:focus-visible {
+    outline: 3px solid rgb(23 105 224 / 45%);
+    outline-offset: 2px;
+  }
+
+  .location-search-mobile-close svg {
+    width: 1.35rem;
+    height: 1.35rem;
+    fill: none;
+    stroke: currentcolor;
+    stroke-linecap: round;
+    stroke-width: 2;
+  }
+
+  .location-search--mobile-open .location-search-field {
+    height: 2.85rem;
+  }
+
+  .location-search--mobile-open .location-search-panel {
+    max-height: calc(100vh - 5.1rem);
+    max-height: calc(100dvh - 5.1rem);
+    overflow-y: auto;
+  }
+
+  .location-search--mobile-open .location-search-results {
+    max-height: calc(100vh - 5.6rem);
+    max-height: calc(100dvh - 5.6rem);
+  }
+
+  .map-controls {
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+
+  /* A tap on empty map space can temporarily turn the phone into a map-only
+     canvas. Visibility/pointer suppression preserves each panel's React state,
+     so a second empty tap restores the exact controls and information that were
+     present before the user inspected or panned the map. */
+  .app--map-ui-hidden .map-controls,
+  .app--map-ui-hidden .map-information-popup,
+  .app--map-ui-hidden .map-information-choice-summary,
+  .app--map-ui-hidden .map-position-summary,
+  .app--map-ui-hidden .route-summary,
+  .app--map-ui-hidden .switzerland-mobility-hiking-summary {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Mobile temporary surfaces use an explicit stacking order: itinerary
+     summaries (30), information sheets (32), map/options (34), search (40).
+     Raising the nav only while its sheet exists lets route summaries continue
+     to cover the permanent floating controls the rest of the time. */
+  .map-controls:has(.map-layers-menu) {
+    z-index: 34;
+  }
+
+  .map-control-button--search {
+    display: grid;
+  }
+
+  /* On phones the layer selector is a fixed-height bottom sheet. Keeping half
+     the viewport visible preserves the geographic context, while native scrolling
+     inside the sheet exposes any controls that do not fit. */
+  .map-layers-menu {
+    position: fixed;
+    /* The sheet must cover every permanent map-control item while open. The About
+       button has its own local z-index, so the sheet must sit above that value too. */
+    z-index: 30;
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    max-width: none;
+    height: 50vh;
+    height: 50dvh;
+    max-height: none;
+    padding: 0.4rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom));
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -8px 28px rgb(0 0 0 / 22%);
+    overscroll-behavior: contain;
+  }
+
+  .map-layers-mobile-header {
+    position: sticky;
+    z-index: 1;
+    top: -0.4rem;
+    display: flex;
+    min-height: 3.35rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0 -0.75rem 0.25rem;
+    padding: 0.55rem 0.75rem 0.45rem;
+    color: #17212b;
+    background: rgb(255 255 255 / 97%);
+  }
+
+  .map-layers-mobile-header strong {
+    font-size: 1.1rem;
+    line-height: 1.2;
+  }
+
+  .map-layers-mobile-close {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: 0 0 auto;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 999px;
+    color: #17212b;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .map-layers-mobile-close:hover {
+    background: rgb(23 105 224 / 10%);
+  }
+
+  .map-layers-mobile-close:focus-visible {
+    outline: 3px solid rgb(23 105 224 / 40%);
+    outline-offset: -3px;
+  }
+
+  .map-layers-mobile-close svg {
+    width: 1.55rem;
+    height: 1.55rem;
+    fill: none;
+    stroke: currentcolor;
+    stroke-linecap: round;
+    stroke-width: 2;
+  }
+
+  /* Base maps are much easier to scan on a narrow screen as three preview
+     cards. The labels remain underneath their previews rather than forcing
+     three desktop-style rows to consume vertical map space. */
+  .map-layers-section--base-maps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .map-layers-section--base-maps .map-layers-section-title {
+    grid-column: 1 / -1;
+  }
+
+  .map-layers-section--base-maps .map-layer-option {
+    position: relative;
+    display: grid;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(2.4rem, auto);
+    gap: 0.35rem;
+    align-content: start;
+    padding: 0.3rem;
+    text-align: center;
+  }
+
+  .map-layers-section--base-maps .base-map-option-preview {
+    width: 100%;
+    height: auto;
+    /* A 4:3 preview gives each background enough visual presence to remain
+       recognisable while the three choices still fit on one phone-width row. */
+    aspect-ratio: 4 / 3;
+    border-radius: 7px;
+  }
+
+  .map-layers-section--base-maps .map-layer-option--selected
+    .base-map-option-preview {
+    outline: 3px solid #1769e0;
+    outline-offset: -2px;
+  }
+
+  .map-layers-section--base-maps .map-layer-option-check {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 1.35rem;
+    height: 1.35rem;
+    padding: 0.15rem;
+    border-radius: 999px;
+    color: #ffffff;
+    background: #1769e0;
+    stroke: currentcolor;
+  }
+
+  .map-layers-section--language {
+    display: block;
+    margin-top: 0.35rem;
+    padding-top: 0.35rem;
+    border-top: 1px solid rgb(32 47 60 / 12%);
+  }
+
+  .map-layers-language-options {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem;
+    padding: 0.25rem 0.45rem 0.35rem;
+  }
+
+  .map-layers-language-option {
+    min-height: 2.65rem;
+    padding: 0.35rem 0.25rem;
+    border: 1px solid rgb(32 47 60 / 18%);
+    border-radius: 8px;
+    color: #17212b;
+    background: #ffffff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .map-layers-language-option--selected {
+    border-color: #1769e0;
+    color: #ffffff;
+    background: #1769e0;
+  }
+
+  .map-layers-language-option:focus-visible {
+    outline: 3px solid rgb(23 105 224 / 35%);
+    outline-offset: 2px;
+  }
+
+  .map-layers-about-action {
+    display: flex;
+    width: 100%;
+    min-height: 2.85rem;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.35rem;
+    padding: 0.55rem 0.45rem;
+    border: 0;
+    border-top: 1px solid rgb(32 47 60 / 12%);
+    color: #17212b;
+    background: transparent;
+    font: inherit;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .map-layers-about-action:hover {
+    background: rgb(23 105 224 / 7%);
+  }
+
+  .map-layers-about-action:focus-visible {
+    outline: 3px solid rgb(23 105 224 / 35%);
+    outline-offset: -3px;
+  }
+
+  .map-layers-about-action svg {
+    width: 1.35rem;
+    height: 1.35rem;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: currentcolor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+  }
+
+  /* The direct language and About controls remain useful on desktop but
+     needlessly consume permanent map-control slots on phones. */
+  .language-selector,
+  .about-button {
+    display: none;
+  }
+
+  /* Optional map information uses the same simple mobile pattern as Layers:
+     a fixed half-height sheet keeps the selected map context visible and delegates
+     any extra content to the browser's native scrolling instead of custom drag
+     gestures. Desktop popups keep their existing floating layout. */
+  .map-information-popup {
+    position: fixed;
+    z-index: 32;
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    width: 100vw;
+    height: 50vh;
+    height: 50dvh;
+    max-height: none;
+    flex-direction: column;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -8px 28px rgb(0 0 0 / 22%);
+    overscroll-behavior: contain;
+  }
+
+  .public-transport-stop-popup {
+    min-width: 0;
+    max-width: none;
+  }
+
+  .map-information-popup-header {
+    flex: 0 0 auto;
+  }
+
+  .map-information-popup-body {
+    min-height: 0;
+    max-height: none;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Keep the close glyph compact while giving phone users the same 44 px
+     touch target used by the other primary mobile controls. */
+  .map-information-popup-close,
+  .map-information-choice-close,
+  .switzerland-mobility-hiking-panel-close {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .map-control-button,
+  .language-selector {
+    width: 2.85rem;
+    height: 2.85rem;
+  }
+
+  /* Route editing exposes seven adjacent controls. On phones, keep the six
+     contextual actions together instead of orphaning delete on a second row.
+     A 44 px target preserves comfortable touch interaction, while an adaptive
+     gap uses spare width on larger phones without penalising narrower ones. */
+  .route-controls,
+  .route-action-controls {
+    gap: clamp(0.25rem, 1.75vw, 0.5rem);
+  }
+
+  .route-action-controls {
+    flex-wrap: nowrap;
+    max-width: none;
+  }
+
+  .map-control-button--route-action,
+  .map-control-button--route-toggle {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  /* Mobile browser chrome changes the usable viewport height as its address and
+     navigation bars expand or collapse. Dynamic viewport units keep both dialog
+     edges visible on real devices while the vh declaration remains a fallback. */
+  .about-dialog,
+  .about-dialog-panel,
+  .release-notes-dialog,
+  .release-notes-dialog-panel {
+    max-height: calc(100vh - 2.5rem);
+    max-height: calc(100dvh - 2.5rem);
+  }
+
+  .about-dialog-details > div,
+  .about-dialog-credits > div {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+
+  .location-message {
+    top: 10.7rem;
+    right: 3.55rem;
+  }
+
+  /* Ambiguity choices use one transient full-width bottom sheet on phones;
+     detailed information still moves to its normal feature-specific surface. */
+  .map-information-choice-summary {
+    z-index: 30;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    max-width: 100vw;
+    height: auto;
+    max-height: 50vh;
+    max-height: 50dvh;
+    transform: none;
+  }
+
+  .map-information-choice-panel {
+    display: flex;
+    width: 100%;
+    max-height: 50vh;
+    max-height: 50dvh;
+    min-height: 0;
+    flex-direction: column;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .map-information-choice-panel-header {
+    min-height: 3.2rem;
+    padding-left: 0.8rem;
+  }
+
+  .map-information-choice-content {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+
+  .map-information-choices {
+    min-height: 0;
+    max-height: none;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+
+  .switzerland-mobility-hiking-summary {
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    left: 0.75rem;
+    width: calc(100vw - 5.25rem);
+    max-width: calc(100vw - 5.25rem);
+    transform: none;
+  }
+
+  /* Once a public route is the current itinerary, its metrics and optional
+     profile use the same full-width mobile footprint as editable/imported
+     itineraries. Transient loading and error states can stay tied to their map
+     click; ambiguity choices use the separate common bottom sheet above. */
+  .switzerland-mobility-hiking-summary--selected {
+    z-index: 30;
+    bottom: env(safe-area-inset-bottom, 0px);
+    left: 0;
+    width: 100vw;
+    max-width: 100vw;
+  }
+
+
+  .switzerland-mobility-hiking-panel-header {
+    min-height: 3.2rem;
+    padding-left: 0.8rem;
+  }
+
+  .switzerland-mobility-hiking-metrics {
+    min-height: 2.85rem;
+    grid-template-columns: minmax(0, 1fr) 2.85rem;
+    font-size: clamp(0.78rem, 3.4vw, 0.92rem);
+  }
+
+  .switzerland-mobility-hiking-metric-values {
+    grid-template-columns:
+      minmax(3.4rem, 1fr)
+      minmax(3.2rem, 0.9fr)
+      minmax(3.2rem, 0.9fr)
+      minmax(4.2rem, 1.2fr);
+  }
+
+  .switzerland-mobility-hiking-metric-values .route-statistics-item {
+    padding-block: 0.4rem;
+  }
+
+  .switzerland-mobility-hiking-profile-toggle {
+    min-height: 2.85rem;
+  }
+
+  .switzerland-mobility-hiking-elevation-error {
+    width: 100%;
+  }
+
+  /* On phones the statistics strip uses the complete viewport width. The
+     contextual edit action moves above it instead of permanently reserving a
+     right-side gutter that made both the bar and elevation profile narrower. */
+  .route-summary {
+    z-index: 30;
+    bottom: env(safe-area-inset-bottom, 0px);
+    left: 0;
+    width: 100vw;
+    max-width: 100vw;
+    transform: none;
+  }
+
+  /* Some phones report no bottom safe-area inset in browser fullscreen even
+     though rounded display corners can overlap the full-width profile action.
+     Keep normal mobile layout flush to the usable viewport, but guarantee a
+     small clearance when Via Helvetica itself owns fullscreen. */
+  .app:fullscreen .route-summary,
+  .app:fullscreen .switzerland-mobility-hiking-summary--selected {
+    bottom: max(env(safe-area-inset-bottom, 0px), 1.5rem);
+  }
+
+  .route-statistics {
+    width: 100%;
+    grid-template-columns:
+      minmax(3.4rem, 1fr)
+      minmax(3.2rem, 0.9fr)
+      minmax(3.2rem, 0.9fr)
+      minmax(4.2rem, 1.2fr)
+      2.85rem;
+  }
+
+  .route-statistics-item {
+    min-width: 0;
+    min-height: 2.85rem;
+    align-items: center;
+    gap: 0.12rem;
+    padding: 0.4rem 0.15rem;
+  }
+
+  /* Narrow screens prioritize the four values, while the full localized
+     labels remain available to assistive technology. */
+  .route-statistics-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .route-statistics-direction-icon {
+    display: block;
+    width: 0.75rem;
+    height: 0.9rem;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: #43515d;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2.4;
+  }
+
+  .route-statistics-item strong {
+    min-width: 0;
+    font-size: clamp(0.72rem, 3.3vw, 0.86rem);
+    text-align: center;
+  }
+
+  .route-profile-toggle {
+    width: 2.85rem;
+  }
+
+  /* On phones the edit action belongs above the complete route-summary block,
+     not between the elevation profile and statistics strip. Making the row
+     non-positioned lets the button anchor to .route-summary, so profile and
+     statistics stay visually connected while the action remains easy to reach.
+     The right inset matches the permanent mobile map-control column. */
+  .route-statistics-row {
+    position: static;
+  }
+
+  .route-summary-edit-button {
+    display: grid;
+    top: auto;
+    right: 0.75rem;
+    bottom: calc(100% + 0.35rem);
+    left: auto;
+    width: 2.85rem;
+    height: 2.85rem;
+  }
+
+  .route-summary-edit-button img {
+    width: 1.4rem;
+    height: 1.4rem;
+  }
+
+  .route-profile-toggle svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  /* Preserve the SVG's native 720:150 aspect ratio on phones instead of
+     forcing extra chart height. A taller viewport would add empty space (or
+     visually over-emphasise relief if stretched) without adding information. */
+  .route-elevation-profile-chart {
+    min-height: 0;
+  }
+
+  /* SVG text scales down with the chart on narrow screens. Slightly larger
+     source labels keep distance and elevation graduations legible without
+     changing the chart geometry or exaggerating the terrain profile. */
+  .route-elevation-profile-axis-label,
+  .route-elevation-profile-distance-label {
+    font-size: 20px;
+  }
+
+  .route-elevation-profile {
+    padding: 0.65rem 0.65rem 0.45rem;
+  }
+
+  .route-message {
+    top: 8rem;
+  }
+}
+
+
+@media (max-width: 430px) {
+  .route-elevation-profile {
+    padding-right: 0.45rem;
+    padding-left: 0.45rem;
+  }
+
+  .route-elevation-profile-header {
+    padding-right: 0.55rem;
+    padding-left: 0.55rem;
+  }
+}

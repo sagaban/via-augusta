@@ -1,0 +1,1033 @@
+{
+  "currentVersion": "1.7.2",
+  "locales": {
+    "fr": {
+      "dialog": {
+        "title": "Nouveautés de Via Helvetica 1.7.2",
+        "historyLink": "Voir l’historique complet",
+        "historyLinkNewTabLabel": "s’ouvre dans un nouvel onglet"
+      },
+      "page": {
+        "title": "Historique des versions – Via Helvetica",
+        "description": "Découvrez l’historique des versions du planificateur d’itinéraires de randonnée Via Helvetica.",
+        "heading": "Historique des versions",
+        "intro": "Découvrez les principales évolutions de Via Helvetica depuis sa première version publique.",
+        "backToApp": "Retour à Via Helvetica",
+        "currentLabel": "Version actuelle",
+        "languageNavigation": "Langue",
+        "versionLabel": "Version"
+      },
+      "releases": [
+        {
+          "version": "1.7.2",
+          "summary": "Cette version apporte de petites améliorations de lisibilité et de localisation.",
+          "items": [
+            {
+              "id": "clearerShootingNoticeTimes",
+              "title": "Horaires des avis de tir plus lisibles :",
+              "description": "Les horaires des avis de tir sont désormais affichés avec les deux-points entre les heures et les minutes, par exemple 07:30 au lieu de 0730.",
+              "details": [],
+              "showInDialog": false
+            },
+            {
+              "id": "localizedDataSourceCredits",
+              "title": "Crédits des sources de données localisés :",
+              "description": "Les crédits des sources de données affichés dans « À propos de Via Helvetica » sont désormais présentés dans la langue de l’interface.",
+              "details": [],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.7.1",
+          "summary": "Cette version optimise le chargement des arrêts de transports publics sans modifier leur utilisation sur la carte.",
+          "items": [
+            {
+              "id": "publicTransportStaticCatalog",
+              "title": "Chargement des arrêts de transports publics optimisé :",
+              "description": "Via Helvetica charge désormais les positions des arrêts depuis un catalogue national compact préparé à partir des données officielles de l’OFT, ce qui évite de multiplier les requêtes réseau lors des déplacements sur la carte.",
+              "details": [
+                "Le catalogue n’est téléchargé que lorsque la couche des arrêts est activée à un niveau de zoom où les arrêts peuvent être affichés, puis il est réutilisé localement pendant la session.",
+                "Les prochains départs restent récupérés à la demande lorsqu’un arrêt est sélectionné.",
+                "Le catalogue est publié sous une URL immuable et peut être mis à jour séparément lorsque l’OFT publie une nouvelle édition des données."
+              ],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.7.0",
+          "summary": "Cette version améliore la lisibilité des transports publics et unifie l’accès aux informations présentes sous un même clic, tout en ajoutant l’inspection des coordonnées et de l’altitude sur ordinateur.",
+          "items": [
+            {
+              "id": "clearerMapInformation",
+              "title": "Transports publics et informations de carte plus lisibles :",
+              "description": "Les arrêts de transports publics sont désormais affichés de manière plus sélective aux niveaux de zoom faibles et moyens afin de préserver la lisibilité de la carte. Lorsqu’un même clic correspond à plusieurs informations, Via Helvetica les regroupe dans un choix commun.",
+              "details": [
+                "Davantage d’arrêts réapparaissent progressivement en zoomant, tandis que les arrêts très proches conservent leur léger décalage visuel pour rester sélectionnables séparément.",
+                "Les arrêts masqués pour alléger la carte restent accessibles depuis un arrêt visible voisin.",
+                "Le choix commun peut réunir fermetures ou déviations, zones de danger, arrêts de transports publics et itinéraires « À pied SuisseMobile », avec les informations de sécurité en premier.",
+                "Des pictogrammes distincts facilitent l’identification des différents types d’information."
+              ]
+            },
+            {
+              "id": "desktopPositionInspection",
+              "title": "Coordonnées et altitude au clic droit :",
+              "description": "Sur ordinateur, un clic droit sur la carte place un point temporaire et affiche ses coordonnées WGS 84 et LV95 ainsi que l’altitude du terrain, sans interrompre l’itinéraire en cours.",
+              "details": [
+                "Les coordonnées WGS 84 et LV95 peuvent être copiées directement depuis le panneau.",
+                "Un nouveau clic droit déplace le point et remplace l’inspection précédente.",
+                "L’itinéraire courant et l’état ouvert ou fermé de son profil d’altitude sont conservés pendant l’inspection.",
+                "Si nécessaire, la carte se décale légèrement sans changer le zoom afin que le point inspecté reste visible à côté du panneau."
+              ]
+            }
+          ]
+        },
+        {
+          "version": "1.6.0",
+          "summary": "Cette version améliore fortement l’expérience sur mobile tout en conservant Via Helvetica comme outil de préparation pensé d’abord pour les grands écrans.",
+          "items": [
+            {
+              "id": "refinedMobileExperience",
+              "title": "Expérience mobile repensée :",
+              "description": "L’interface sur les petits écrans a été largement revue afin de laisser davantage de place à la carte et de rendre les actions essentielles plus fluides : recherche plein écran, panneau Carte et options, panneaux d’information adaptés, profils et statistiques pleine largeur, ainsi qu’un mode carte seule. Via Helvetica reste néanmoins pensé avant tout pour préparer des itinéraires sur un grand écran.",
+              "details": [
+                "Les commandes d’édition ont été compactées et la recherche s’ouvre désormais en plein écran sur mobile.",
+                "Le panneau « Carte et options » regroupe les fonds de carte, les couches d’information, la langue et l’accès à « À propos de Via Helvetica » afin d’alléger les contrôles permanents sur la carte.",
+                "Les panneaux d’information, le profil d’altitude, les statistiques et les panneaux SuisseMobile utilisent mieux la largeur disponible et défilent naturellement lorsque leur contenu dépasse.",
+                "Hors édition d’itinéraire, un appui sur une zone vide de la carte masque temporairement les contrôles et panneaux pour examiner la carte ; un second appui restaure la même interface."
+              ]
+            },
+            {
+              "id": "persistentRouteExport",
+              "title": "Export toujours disponible :",
+              "description": "Le bouton d’export reste désormais visible tant qu’un itinéraire est affiché, même après avoir quitté le mode création ou édition. Il disparaît seulement lorsqu’aucun itinéraire courant n’est sélectionné.",
+              "details": []
+            }
+          ]
+        },
+        {
+          "version": "1.5.0",
+          "summary": "Cette version permet de modifier un GPX importé et harmonise l’accès à l’export des itinéraires.",
+          "items": [
+            {
+              "id": "editableImportedGpx",
+              "title": "Modifier un GPX importé :",
+              "description": "Un GPX est toujours chargé d’abord en lecture seule. Un bouton crayon apparaît ensuite à droite du résumé de l’itinéraire pour le rendre éditable, sans recalculer ni simplifier son tracé initial.",
+              "details": [
+                "Lors de la conversion, Via Helvetica place des points d’ancrage sur des sommets existants du GPX, avec une cible d’environ un point par kilomètre et un espacement plus serré pour les itinéraires courts.",
+                "La géométrie du GPX reste identique tant qu’elle n’est pas modifiée ; déplacer ou insérer un point ne recalcule que les sections concernées.",
+                "Pour garder la carte lisible, le nombre de poignées visibles s’adapte au niveau de zoom sans supprimer les points d’ancrage de l’itinéraire.",
+                "Tant que l’itinéraire converti reste intact, l’export conserve le document GPX d’origine. Après une modification, Via Helvetica génère un nouveau GPX en conservant les sommets des sections importées qui n’ont pas été touchées.",
+                "Dans cette première version, l’édition est réservée aux GPX continus situés dans l’étendue prise en charge et comportant au plus 20 000 sommets."
+              ]
+            },
+            {
+              "id": "sharedSwitzerlandMobilityExport",
+              "title": "Export SuisseMobile regroupé :",
+              "description": "Lorsqu’un itinéraire « À pied SuisseMobile » est sélectionné, son export utilise désormais le même bouton à droite de la carte que les itinéraires créés et les GPX importés.",
+              "details": [
+                "Le bouton d’export a été retiré du panneau de détail SuisseMobile afin de regrouper cette action avec les autres exports de l’application.",
+                "Le bouton commun apparaît uniquement lorsqu’un itinéraire SuisseMobile exportable est effectivement sélectionné."
+              ]
+            }
+          ]
+        },
+        {
+          "version": "1.4.0",
+          "summary": "Cette version facilite le transfert des itinéraires vers l’app swisstopo et réduit la taille des fichiers GPX exportés.",
+          "items": [
+            {
+              "id": "swisstopoTransfer",
+              "title": "Transfert vers l’app swisstopo :",
+              "description": "Depuis un ordinateur, un QR code permet désormais d’ouvrir l’itinéraire courant dans l’app swisstopo. Le partage est également disponible pour les GPX importés.",
+              "details": [
+                "Le bouton d’export et de partage a été déplacé afin de rester disponible pour l’itinéraire créé dans Via Helvetica comme pour un GPX chargé en lecture seule.",
+                "Sur mobile, le transfert s’ouvre directement dans l’app swisstopo sans passer par un QR code.",
+                "Pour permettre le transfert, le fichier GPX est hébergé temporairement pendant 24 heures dans un stockage dédié, uniquement après une action explicite de l’utilisateur, sans être associé à son identité."
+              ]
+            },
+            {
+              "id": "compactGpxExport",
+              "title": "Fichiers GPX plus compacts :",
+              "description": "Les GPX générés par Via Helvetica sont désormais minifiés, ce qui réduit leur taille sans modifier les coordonnées, les altitudes ou les métadonnées utiles.",
+              "details": []
+            },
+            {
+              "id": "interfaceRefinements",
+              "title": "Interface et affichage affinés :",
+              "description": "Plusieurs ajustements améliorent l’utilisation des GPX importés et l’interface sur les petits écrans.",
+              "details": [
+                "Lors d’imports successifs de GPX, le cadrage utilise désormais un niveau de zoom natif de swisstopo afin d’éviter un fond de carte flou.",
+                "Sur les petits écrans, les boutons de zoom + et − sont masqués, le profil d’altitude reste entièrement visible à côté des contrôles et le panneau des couches reste accessible lorsque l’espace disponible est réduit."
+              ],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.3.0",
+          "summary": "Cette version réduit les données téléchargées lors de la création d’itinéraires.",
+          "items": [
+            {
+              "id": "optimizedRoutingDataLoading",
+              "title": "Chargement des données de routage optimisé :",
+              "description": "Via Helvetica charge plus précisément les zones nécessaires autour de chaque segment. Lors de nos tests, le nombre de tuiles de routage téléchargées a ainsi diminué d’environ 50 % en moyenne, sans modifier les itinéraires calculés.",
+              "details": [
+                "La zone chargée commence au plus près du segment et s’élargit automatiquement uniquement lorsque cela est nécessaire.",
+                "Les corridors de routage historiques restent utilisés comme solution de repli lorsque le résultat ne peut pas être validé dans une zone plus petite."
+              ]
+            }
+          ]
+        },
+        {
+          "version": "1.2.0",
+          "summary": "Cette version rend la création d’itinéraires plus rapide et améliore la lisibilité du profil d’altitude.",
+          "items": [
+            {
+              "id": "fasterRouteCreation",
+              "title": "Création d’itinéraires plus rapide :",
+              "description": "L’ajout et le recalcul des segments sont désormais plus réactifs.",
+              "details": [
+                "Le routage s’appuie désormais sur des données précalculées pour l’ensemble de la Suisse, chargées à la demande autour de l’itinéraire.",
+                "Les services GeoAdmin restent disponibles comme solution de secours lorsque les données précalculées ne peuvent pas être utilisées."
+              ]
+            },
+            {
+              "id": "elevationProfile",
+              "title": "Profil d’altitude amélioré :",
+              "description": "L’échelle verticale s’adapte mieux au relief et à la longueur de l’itinéraire.",
+              "details": []
+            },
+            {
+              "id": "usageInformation",
+              "title": "Informations d’utilisation clarifiées :",
+              "description": "La fenêtre « À propos » précise désormais que les itinéraires et les données cartographiques sont fournis à titre indicatif et doivent être adaptés aux conditions rencontrées.",
+              "details": [],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.1.0",
+          "summary": "Cette version ajoute la sélection d’itinéraires SuisseMobile, la recherche par coordonnées et plusieurs améliorations de l’interface.",
+          "items": [
+            {
+              "id": "switzerlandMobility",
+              "title": "Itinéraires SuisseMobile :",
+              "description": "La couche optionnelle « À pied SuisseMobile », à activer dans le menu des couches, permet de sélectionner un itinéraire, de consulter son profil et de l’exporter au format GPX.",
+              "details": []
+            },
+            {
+              "id": "coordinateSearch",
+              "title": "Recherche par coordonnées :",
+              "description": "Vous pouvez désormais rechercher un lieu à partir de coordonnées GPS décimales (WGS 84) ou suisses (LV95).",
+              "details": []
+            },
+            {
+              "id": "layerOpacity",
+              "title": "Opacité des couches :",
+              "description": "L’opacité des couches d’information peut être ajustée pour mieux lire la carte sous-jacente.",
+              "details": []
+            },
+            {
+              "id": "distantWaypoints",
+              "title": "Points de passage éloignés :",
+              "description": "Lorsqu’un point est trop éloigné pour être relié par le routage automatique, un message vous invite à ajouter un point intermédiaire.",
+              "details": []
+            },
+            {
+              "id": "generalImprovements",
+              "title": "Améliorations générales :",
+              "description": "Le déplacement des points, l’affichage des panneaux d’information, le résumé de l’itinéraire et l’export GPX ont été rendus plus fluides.",
+              "details": [
+                "La carte se déplace automatiquement lorsqu’un point d’itinéraire est glissé près du bord de l’écran.",
+                "Les arrêts de transports publics, fermetures et zones de danger sélectionnés restent visibles à côté de leur panneau d’information.",
+                "Les libellés du résumé d’itinéraire sont plus lisibles et la sélection de fichiers d’export est limitée au format GPX.",
+                "Les langues disposent d’adresses dédiées (/fr/, /de/, /it/ et /en/) afin de partager un lien dans la bonne langue et d’améliorer le référencement.",
+                "Plusieurs ajustements améliorent l’affichage des dialogues et des contrôles sur les petits écrans."
+              ],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.0.0",
+          "summary": "Première version publique de Via Helvetica : création et modification d’itinéraires, routage expérimental basé sur swissTLM3D, profil d’altitude, import et export GPX, fermetures, zones de danger et informations sur les transports publics.",
+          "items": []
+        }
+      ]
+    },
+    "de": {
+      "dialog": {
+        "title": "Neu in Via Helvetica 1.7.2",
+        "historyLink": "Vollständigen Versionsverlauf anzeigen",
+        "historyLinkNewTabLabel": "öffnet in einem neuen Tab"
+      },
+      "page": {
+        "title": "Versionsverlauf – Via Helvetica",
+        "description": "Entdecken Sie den Versionsverlauf des Schweizer Wander-Routenplaners Via Helvetica.",
+        "heading": "Versionsverlauf",
+        "intro": "Entdecken Sie die wichtigsten Entwicklungen von Via Helvetica seit der ersten öffentlichen Version.",
+        "backToApp": "Zurück zu Via Helvetica",
+        "currentLabel": "Aktuelle Version",
+        "languageNavigation": "Sprache",
+        "versionLabel": "Version"
+      },
+      "releases": [
+        {
+          "version": "1.7.2",
+          "summary": "Diese Version bringt kleine Verbesserungen bei Lesbarkeit und Lokalisierung.",
+          "items": [
+            {
+              "id": "clearerShootingNoticeTimes",
+              "title": "Besser lesbare Zeiten bei Schiessanzeigen:",
+              "description": "Die Zeiten in Schiessanzeigen werden nun mit Doppelpunkt zwischen Stunden und Minuten angezeigt, zum Beispiel 07:30 statt 0730.",
+              "details": [],
+              "showInDialog": false
+            },
+            {
+              "id": "localizedDataSourceCredits",
+              "title": "Lokalisierte Angaben zu Datenquellen:",
+              "description": "Die Angaben zu den Datenquellen unter „Über Via Helvetica“ werden nun in der Sprache der Benutzeroberfläche angezeigt.",
+              "details": [],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.7.1",
+          "summary": "Diese Version optimiert das Laden der Haltestellen des öffentlichen Verkehrs, ohne ihre Bedienung auf der Karte zu ändern.",
+          "items": [
+            {
+              "id": "publicTransportStaticCatalog",
+              "title": "Optimiertes Laden der Haltestellen des öffentlichen Verkehrs:",
+              "description": "Via Helvetica lädt die Positionen der Haltestellen nun aus einem kompakten landesweiten Katalog, der aus den offiziellen Daten des BAV erstellt wird. Dadurch werden wiederholte Netzwerkanfragen beim Verschieben der Karte vermieden.",
+              "details": [
+                "Der Katalog wird erst heruntergeladen, wenn die Haltestellenebene bei einer Zoomstufe aktiviert ist, auf der Haltestellen angezeigt werden können, und danach während der Sitzung lokal wiederverwendet.",
+                "Die nächsten Abfahrten werden weiterhin bei Bedarf geladen, wenn eine Haltestelle ausgewählt wird.",
+                "Der Katalog wird unter einer unveränderlichen URL veröffentlicht und kann separat aktualisiert werden, wenn das BAV eine neue Datenausgabe veröffentlicht."
+              ],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.7.0",
+          "summary": "Diese Version verbessert die Übersichtlichkeit der Haltestellen und bündelt Informationen, die unter demselben Kartenklick liegen. Auf dem Desktop lassen sich ausserdem Koordinaten und Geländehöhe per Rechtsklick abfragen.",
+          "items": [
+            {
+              "id": "clearerMapInformation",
+              "title": "Übersichtlichere Haltestellen und Karteninformationen:",
+              "description": "Haltestellen des öffentlichen Verkehrs werden bei kleinen und mittleren Zoomstufen nun ausgedünnt, damit die Karte lesbar bleibt. Liegen mehrere Informationen unter demselben Klick, bündelt Via Helvetica sie in einer gemeinsamen Auswahl.",
+              "details": [
+                "Beim Hineinzoomen erscheinen schrittweise mehr Haltestellen; sehr nahe Haltestellen behalten ihre leichte visuelle Auffächerung, damit sie getrennt auswählbar bleiben.",
+                "Durch das Ausdünnen ausgeblendete Haltestellen bleiben über eine sichtbare benachbarte Haltestelle erreichbar.",
+                "Die gemeinsame Auswahl kann Sperrungen oder Umleitungen, Gefahrenzonen, Haltestellen des öffentlichen Verkehrs und Wanderwege von SchweizMobil enthalten; Sicherheitsinformationen stehen zuerst.",
+                "Unterschiedliche Piktogramme erleichtern die Zuordnung der Informationstypen."
+              ]
+            },
+            {
+              "id": "desktopPositionInspection",
+              "title": "Koordinaten und Höhe per Rechtsklick:",
+              "description": "Auf dem Desktop setzt ein Rechtsklick auf die Karte einen temporären Punkt und zeigt WGS-84- und LV95-Koordinaten sowie die Geländehöhe an, ohne die aktuelle Route zu unterbrechen.",
+              "details": [
+                "WGS-84- und LV95-Koordinaten können direkt aus dem Panel kopiert werden.",
+                "Ein weiterer Rechtsklick verschiebt den Punkt und ersetzt die vorherige Abfrage.",
+                "Die aktuelle Route und der geöffnete oder geschlossene Zustand ihres Höhenprofils bleiben während der Abfrage erhalten.",
+                "Falls nötig, wird die Karte ohne Zoomänderung leicht verschoben, damit der abgefragte Punkt neben dem Panel sichtbar bleibt."
+              ]
+            }
+          ]
+        },
+        {
+          "version": "1.6.0",
+          "summary": "Diese Version verbessert die mobile Nutzung deutlich, während Via Helvetica weiterhin in erster Linie als Planungswerkzeug für grosse Bildschirme gedacht ist.",
+          "items": [
+            {
+              "id": "refinedMobileExperience",
+              "title": "Überarbeitete mobile Bedienung:",
+              "description": "Die Oberfläche auf kleinen Bildschirmen wurde umfassend überarbeitet, damit die Karte mehr Platz erhält und die wichtigsten Aktionen flüssiger erreichbar sind: Vollbildsuche, Karte-und-Optionen-Panel, angepasste Informationspanels, Profile und Statistiken über die volle Breite sowie ein reiner Kartenmodus. Via Helvetica bleibt dennoch in erster Linie für die Routenplanung auf grossen Bildschirmen konzipiert.",
+              "details": [
+                "Die Bearbeitungsaktionen wurden kompakter angeordnet, und die Suche öffnet sich auf Mobilgeräten jetzt im Vollbild.",
+                "Der Bereich «Karte und Optionen» bündelt Grundkarten, Informationsebenen, Sprache und den Zugang zu «Über Via Helvetica» und reduziert so die dauerhaft sichtbaren Kartenbedienelemente.",
+                "Informationsfenster, Höhenprofil, Statistik und SchweizMobil-Panels nutzen die verfügbare Breite besser und lassen sich bei längerem Inhalt natürlich scrollen.",
+                "Ausserhalb der Routenbearbeitung blendet ein Tipp auf eine freie Kartenstelle Bedienelemente und Panels vorübergehend aus; ein weiterer Tipp stellt dieselbe Oberfläche wieder her."
+              ]
+            },
+            {
+              "id": "persistentRouteExport",
+              "title": "Export bleibt verfügbar:",
+              "description": "Der Export-Button bleibt jetzt sichtbar, solange eine Route auf der Karte angezeigt wird, auch nachdem der Erstellungs- oder Bearbeitungsmodus verlassen wurde. Er verschwindet erst, wenn keine aktuelle Route mehr ausgewählt ist.",
+              "details": []
+            }
+          ]
+        },
+        {
+          "version": "1.5.0",
+          "summary": "Diese Version macht importierte GPX-Dateien bearbeitbar und vereinheitlicht den Export von Routen.",
+          "items": [
+            {
+              "id": "editableImportedGpx",
+              "title": "Importierte GPX-Dateien bearbeiten:",
+              "description": "Eine GPX-Datei wird weiterhin zunächst schreibgeschützt geladen. Danach erscheint rechts neben der Routenzusammenfassung ein Stift-Symbol, mit dem sie ohne Neuberechnung oder Vereinfachung des ursprünglichen Verlaufs bearbeitbar wird.",
+              "details": [
+                "Bei der Umwandlung setzt Via Helvetica Ankerpunkte auf vorhandene GPX-Stützpunkte, mit einem Zielabstand von ungefähr einem Kilometer und dichterer Verteilung bei kurzen Routen.",
+                "Die GPX-Geometrie bleibt unverändert, solange sie nicht bearbeitet wird; beim Verschieben oder Einfügen eines Punkts werden nur die betroffenen Abschnitte neu berechnet.",
+                "Damit die Karte übersichtlich bleibt, passt sich die Zahl der sichtbaren Anfasser an den Zoom an, ohne Ankerpunkte aus der Route zu entfernen.",
+                "Solange die umgewandelte Route unverändert bleibt, wird beim Export das ursprüngliche GPX-Dokument beibehalten. Nach einer Änderung erzeugt Via Helvetica eine neue GPX-Datei und erhält die Stützpunkte der unberührten importierten Abschnitte.",
+                "In dieser ersten Version können nur durchgehende GPX-Tracks innerhalb des unterstützten Kartenausschnitts mit höchstens 20 000 Stützpunkten bearbeitet werden."
+              ]
+            },
+            {
+              "id": "sharedSwitzerlandMobilityExport",
+              "title": "Gebündelter SchweizMobil-Export:",
+              "description": "Bei einer ausgewählten Wanderroute von SchweizMobil erfolgt der Export jetzt über denselben Button rechts auf der Karte wie bei erstellten Routen und importierten GPX-Dateien.",
+              "details": [
+                "Der bisherige Export-Button wurde aus dem SchweizMobil-Detailfenster entfernt, damit alle Exporte an derselben Stelle verfügbar sind.",
+                "Der gemeinsame Button erscheint nur, wenn tatsächlich eine exportierbare SchweizMobil-Route ausgewählt ist."
+              ]
+            }
+          ]
+        },
+        {
+          "version": "1.4.0",
+          "summary": "Diese Version erleichtert die Übertragung von Routen in die swisstopo-App und verkleinert exportierte GPX-Dateien.",
+          "items": [
+            {
+              "id": "swisstopoTransfer",
+              "title": "Übertragung in die swisstopo-App:",
+              "description": "Am Computer kann die aktuelle Route jetzt per QR-Code in der swisstopo-App geöffnet werden. Die Funktion steht auch für importierte GPX-Dateien zur Verfügung.",
+              "details": [
+                "Die Export- und Teilen-Funktion wurde verschoben, damit sie sowohl für in Via Helvetica erstellte Routen als auch für schreibgeschützt geladene GPX-Dateien verfügbar bleibt.",
+                "Auf Mobilgeräten wird die Übertragung direkt in der swisstopo-App geöffnet, ohne QR-Code.",
+                "Für die Übertragung wird die GPX-Datei nach einer ausdrücklichen Benutzeraktion für 24 Stunden in einem eigenen Speicher zwischengespeichert, ohne mit der Identität des Benutzers verknüpft zu werden."
+              ]
+            },
+            {
+              "id": "compactGpxExport",
+              "title": "Kompaktere GPX-Dateien:",
+              "description": "Von Via Helvetica erzeugte GPX-Dateien werden nun minimiert. Dadurch sinkt die Dateigrösse, ohne Koordinaten, Höhenangaben oder nützliche Metadaten zu verändern.",
+              "details": []
+            },
+            {
+              "id": "interfaceRefinements",
+              "title": "Verfeinerte Oberfläche und Darstellung:",
+              "description": "Mehrere Anpassungen verbessern den Umgang mit importierten GPX-Dateien und die Bedienung auf kleinen Bildschirmen.",
+              "details": [
+                "Bei mehreren GPX-Importen nacheinander verwendet der Kartenausschnitt nun eine native swisstopo-Zoomstufe, damit der Kartenhintergrund scharf bleibt.",
+                "Auf kleinen Bildschirmen werden die Zoomtasten + und − ausgeblendet, das Höhenprofil bleibt neben den Bedienelementen vollständig sichtbar und das Ebenenfenster bleibt auch bei begrenztem Platz zugänglich."
+              ],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.3.0",
+          "summary": "Diese Version reduziert die beim Erstellen von Routen heruntergeladenen Daten.",
+          "items": [
+            {
+              "id": "optimizedRoutingDataLoading",
+              "title": "Optimiertes Laden der Routingdaten:",
+              "description": "Via Helvetica lädt die für jeden Routenabschnitt benötigten Bereiche jetzt gezielter. In unseren Tests wurden dadurch durchschnittlich rund 50 % weniger Routing-Kacheln heruntergeladen, ohne die berechneten Routen zu verändern.",
+              "details": [
+                "Der geladene Bereich beginnt möglichst nah am Routenabschnitt und wird nur bei Bedarf automatisch erweitert.",
+                "Die bisherigen Routing-Korridore bleiben als Ausweichlösung erhalten, wenn das Ergebnis in einem kleineren Bereich nicht bestätigt werden kann."
+              ]
+            }
+          ]
+        },
+        {
+          "version": "1.2.0",
+          "summary": "Diese Version beschleunigt die Routenerstellung und verbessert die Lesbarkeit des Höhenprofils.",
+          "items": [
+            {
+              "id": "fasterRouteCreation",
+              "title": "Schnellere Routenerstellung:",
+              "description": "Das Hinzufügen und Neuberechnen von Routenabschnitten ist jetzt schneller.",
+              "details": [
+                "Das Routing nutzt nun vorberechnete Daten für die ganze Schweiz, die bei Bedarf rund um die Route geladen werden.",
+                "Die GeoAdmin-Dienste bleiben als Ausweichlösung verfügbar, wenn die vorberechneten Daten nicht verwendet werden können."
+              ]
+            },
+            {
+              "id": "elevationProfile",
+              "title": "Verbessertes Höhenprofil:",
+              "description": "Die vertikale Skala passt sich besser an das Gelände und die Länge der Route an.",
+              "details": []
+            },
+            {
+              "id": "usageInformation",
+              "title": "Präzisierte Nutzungshinweise:",
+              "description": "Im Fenster «Über Via Helvetica» wird nun deutlicher darauf hingewiesen, dass Routen und Kartendaten nur zur Orientierung dienen und an die tatsächlichen Bedingungen angepasst werden müssen.",
+              "details": [],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.1.0",
+          "summary": "Diese Version ergänzt die Auswahl von SchweizMobil-Routen, die Koordinatensuche und mehrere Verbesserungen der Benutzeroberfläche.",
+          "items": [
+            {
+              "id": "switzerlandMobility",
+              "title": "SchweizMobil-Routen:",
+              "description": "Die optionale Ebene «Wanderland SchweizMobil» lässt sich im Ebenenmenü aktivieren. Danach können Sie eine Route auswählen, ihr Höhenprofil anzeigen und sie als GPX exportieren.",
+              "details": []
+            },
+            {
+              "id": "coordinateSearch",
+              "title": "Koordinatensuche:",
+              "description": "Orte können nun über dezimale GPS-Koordinaten (WGS 84) oder Schweizer Koordinaten (LV95) gesucht werden.",
+              "details": []
+            },
+            {
+              "id": "layerOpacity",
+              "title": "Deckkraft der Ebenen:",
+              "description": "Die Deckkraft der Informationsebenen lässt sich anpassen, damit die darunterliegende Karte besser lesbar bleibt.",
+              "details": []
+            },
+            {
+              "id": "distantWaypoints",
+              "title": "Weit entfernte Wegpunkte:",
+              "description": "Ist ein Punkt für die automatische Routenberechnung zu weit entfernt, fordert eine Meldung dazu auf, einen Zwischenpunkt hinzuzufügen.",
+              "details": []
+            },
+            {
+              "id": "generalImprovements",
+              "title": "Allgemeine Verbesserungen:",
+              "description": "Das Verschieben von Punkten, die Anzeige von Informationsfenstern, die Routenzusammenfassung und der GPX-Export wurden flüssiger gestaltet.",
+              "details": [
+                "Die Karte verschiebt sich automatisch, wenn ein Wegpunkt nahe an den Bildschirmrand gezogen wird.",
+                "Ausgewählte Haltestellen, Sperrungen und Gefahrenzonen bleiben neben ihrem Informationsfenster sichtbar.",
+                "Die Beschriftungen der Routenzusammenfassung sind besser lesbar, und die Dateiauswahl beim Export ist auf GPX beschränkt.",
+                "Eigene Sprachpfade (/fr/, /de/, /it/ und /en/) öffnen geteilte Links in der gewählten Sprache und verbessern die Auffindbarkeit.",
+                "Weitere Anpassungen verbessern Dialoge und Bedienelemente auf kleinen Bildschirmen."
+              ],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.0.0",
+          "summary": "Erste öffentliche Version von Via Helvetica: Erstellen und Bearbeiten von Routen, experimentelles swissTLM3D-Routing, Höhenprofil, GPX-Import und -Export, Sperrungen, Gefahrenzonen und Informationen zum öffentlichen Verkehr.",
+          "items": []
+        }
+      ]
+    },
+    "it": {
+      "dialog": {
+        "title": "Novità di Via Helvetica 1.7.2",
+        "historyLink": "Vedi la cronologia completa",
+        "historyLinkNewTabLabel": "si apre in una nuova scheda"
+      },
+      "page": {
+        "title": "Cronologia delle versioni – Via Helvetica",
+        "description": "Scopri la cronologia delle versioni del pianificatore di itinerari escursionistici Via Helvetica.",
+        "heading": "Cronologia delle versioni",
+        "intro": "Scopri le principali evoluzioni di Via Helvetica dalla prima versione pubblica.",
+        "backToApp": "Ritorna a Via Helvetica",
+        "currentLabel": "Versione attuale",
+        "languageNavigation": "Lingua",
+        "versionLabel": "Versione"
+      },
+      "releases": [
+        {
+          "version": "1.7.2",
+          "summary": "Questa versione introduce piccoli miglioramenti alla leggibilità e alla localizzazione.",
+          "items": [
+            {
+              "id": "clearerShootingNoticeTimes",
+              "title": "Orari degli avvisi di tiro più leggibili:",
+              "description": "Gli orari degli avvisi di tiro sono ora visualizzati con i due punti tra ore e minuti, ad esempio 07:30 invece di 0730.",
+              "details": [],
+              "showInDialog": false
+            },
+            {
+              "id": "localizedDataSourceCredits",
+              "title": "Crediti delle fonti dati localizzati:",
+              "description": "I crediti delle fonti dati mostrati in «Informazioni su Via Helvetica» sono ora visualizzati nella lingua dell’interfaccia.",
+              "details": [],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.7.1",
+          "summary": "Questa versione ottimizza il caricamento delle fermate dei trasporti pubblici senza modificarne l’uso sulla carta.",
+          "items": [
+            {
+              "id": "publicTransportStaticCatalog",
+              "title": "Caricamento ottimizzato delle fermate dei trasporti pubblici:",
+              "description": "Via Helvetica carica ora le posizioni delle fermate da un catalogo nazionale compatto preparato a partire dai dati ufficiali dell’UFT, evitando così di moltiplicare le richieste di rete durante gli spostamenti sulla carta.",
+              "details": [
+                "Il catalogo viene scaricato solo quando il livello delle fermate è attivo a un livello di zoom in cui le fermate possono essere visualizzate, quindi viene riutilizzato localmente durante la sessione.",
+                "Le prossime partenze continuano a essere recuperate su richiesta quando viene selezionata una fermata.",
+                "Il catalogo è pubblicato con un URL immutabile e può essere aggiornato separatamente quando l’UFT pubblica una nuova edizione dei dati."
+              ],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.7.0",
+          "summary": "Questa versione migliora la leggibilità delle fermate del trasporto pubblico e riunisce le informazioni presenti sotto lo stesso clic, aggiungendo inoltre su desktop l’ispezione di coordinate e altitudine.",
+          "items": [
+            {
+              "id": "clearerMapInformation",
+              "title": "Trasporti pubblici e informazioni di mappa più leggibili:",
+              "description": "Ai livelli di zoom bassi e medi, alcune fermate dei trasporti pubblici vengono ora nascoste in modo selettivo per mantenere leggibile la carta. Quando lo stesso clic corrisponde a più informazioni, Via Helvetica le riunisce in una selezione comune.",
+              "details": [
+                "Aumentando lo zoom ricompaiono progressivamente più fermate, mentre quelle molto vicine mantengono un leggero scostamento visivo per restare selezionabili separatamente.",
+                "Le fermate nascoste per alleggerire la carta restano accessibili tramite una fermata visibile vicina.",
+                "La selezione comune può riunire chiusure o deviazioni, zone di pericolo, fermate dei trasporti pubblici e itinerari «A piedi SvizzeraMobile», con le informazioni di sicurezza in primo piano.",
+                "Pittogrammi distinti rendono più immediata l’identificazione dei diversi tipi di informazione."
+              ]
+            },
+            {
+              "id": "desktopPositionInspection",
+              "title": "Coordinate e altitudine con il clic destro:",
+              "description": "Su desktop, un clic destro sulla carta posiziona un punto temporaneo e mostra le coordinate WGS 84 e LV95 e l’altitudine del terreno, senza interrompere l’itinerario corrente.",
+              "details": [
+                "Le coordinate WGS 84 e LV95 possono essere copiate direttamente dal pannello.",
+                "Un nuovo clic destro sposta il punto e sostituisce l’ispezione precedente.",
+                "L’itinerario corrente e lo stato aperto o chiuso del relativo profilo altimetrico vengono conservati durante l’ispezione.",
+                "Se necessario, la carta viene spostata leggermente senza cambiare lo zoom, in modo che il punto ispezionato rimanga visibile accanto al pannello."
+              ]
+            }
+          ]
+        },
+        {
+          "version": "1.6.0",
+          "summary": "Questa versione migliora nettamente l’esperienza su mobile, mantenendo Via Helvetica come strumento di preparazione pensato prima di tutto per gli schermi grandi.",
+          "items": [
+            {
+              "id": "refinedMobileExperience",
+              "title": "Esperienza mobile riprogettata:",
+              "description": "L’interfaccia sugli schermi piccoli è stata ampiamente rivista per lasciare più spazio alla carta e rendere più fluide le azioni essenziali: ricerca a schermo intero, pannello Carta e opzioni, pannelli informativi adattati, profili e statistiche a tutta larghezza e una modalità solo mappa. Via Helvetica resta comunque pensata soprattutto per preparare itinerari su schermi grandi.",
+              "details": [
+                "I comandi di modifica sono stati resi più compatti e la ricerca si apre ora a schermo intero sui dispositivi mobili.",
+                "Il pannello «Mappa e opzioni» riunisce le mappe di base, i livelli informativi, la lingua e l’accesso a «Informazioni su Via Helvetica», riducendo i controlli permanenti sulla carta.",
+                "I pannelli informativi, il profilo altimetrico, le statistiche e i pannelli SvizzeraMobile sfruttano meglio la larghezza disponibile e scorrono naturalmente quando il contenuto è più lungo.",
+                "Fuori dalla modifica dell’itinerario, un tocco su una zona vuota della carta nasconde temporaneamente controlli e pannelli per lasciare spazio alla carta; un secondo tocco ripristina la stessa interfaccia."
+              ]
+            },
+            {
+              "id": "persistentRouteExport",
+              "title": "Esportazione sempre disponibile:",
+              "description": "Il pulsante di esportazione rimane ora visibile finché un itinerario è mostrato sulla carta, anche dopo aver lasciato la modalità di creazione o modifica. Scompare soltanto quando non è selezionato alcun itinerario corrente.",
+              "details": []
+            }
+          ]
+        },
+        {
+          "version": "1.5.0",
+          "summary": "Questa versione rende modificabili i GPX importati e riunisce in un unico punto l’esportazione degli itinerari.",
+          "items": [
+            {
+              "id": "editableImportedGpx",
+              "title": "GPX importati modificabili:",
+              "description": "Un GPX continua a essere caricato inizialmente in sola lettura. In seguito compare un pulsante con la matita a destra del riepilogo dell’itinerario, che permette di modificarlo senza ricalcolare né semplificare il tracciato iniziale.",
+              "details": [
+                "Durante la conversione, Via Helvetica posiziona punti di ancoraggio su vertici già presenti nel GPX, con una distanza obiettivo di circa un chilometro e una distribuzione più fitta per gli itinerari brevi.",
+                "La geometria del GPX rimane invariata finché non viene modificata; spostare o inserire un punto ricalcola soltanto le sezioni interessate.",
+                "Per mantenere leggibile la carta, il numero di maniglie visibili si adatta al livello di zoom senza eliminare i punti di ancoraggio dall’itinerario.",
+                "Finché l’itinerario convertito rimane intatto, l’esportazione conserva il documento GPX originale. Dopo una modifica, Via Helvetica genera un nuovo GPX mantenendo i vertici delle sezioni importate non toccate.",
+                "In questa prima versione, la modifica è disponibile per GPX continui all’interno dell’estensione supportata e con un massimo di 20 000 vertici."
+              ]
+            },
+            {
+              "id": "sharedSwitzerlandMobilityExport",
+              "title": "Esportazione SvizzeraMobile riunita:",
+              "description": "Quando è selezionato un itinerario «A piedi SvizzeraMobile», l’esportazione usa ora lo stesso pulsante a destra della carta degli itinerari creati e dei GPX importati.",
+              "details": [
+                "Il pulsante di esportazione è stato rimosso dal pannello dei dettagli SvizzeraMobile per riunire questa azione con le altre esportazioni dell’applicazione.",
+                "Il pulsante comune appare solo quando è effettivamente selezionato un itinerario SvizzeraMobile esportabile."
+              ]
+            }
+          ]
+        },
+        {
+          "version": "1.4.0",
+          "summary": "Questa versione semplifica il trasferimento degli itinerari nell’app swisstopo e riduce le dimensioni dei file GPX esportati.",
+          "items": [
+            {
+              "id": "swisstopoTransfer",
+              "title": "Trasferimento nell’app swisstopo:",
+              "description": "Da computer, un codice QR permette ora di aprire l’itinerario corrente nell’app swisstopo. La funzione è disponibile anche per i file GPX importati.",
+              "details": [
+                "Il comando di esportazione e condivisione è stato spostato per rimanere disponibile sia per l’itinerario creato in Via Helvetica sia per un GPX caricato in sola lettura.",
+                "Su mobile, il trasferimento si apre direttamente nell’app swisstopo senza passare da un codice QR.",
+                "Per consentire il trasferimento, il file GPX viene ospitato temporaneamente per 24 ore in uno spazio dedicato, solo dopo un’azione esplicita dell’utente, senza essere associato alla sua identità."
+              ]
+            },
+            {
+              "id": "compactGpxExport",
+              "title": "File GPX più compatti:",
+              "description": "I GPX generati da Via Helvetica sono ora minificati, riducendo le dimensioni del file senza modificare coordinate, altitudini o metadati utili.",
+              "details": []
+            },
+            {
+              "id": "interfaceRefinements",
+              "title": "Interfaccia e visualizzazione perfezionate:",
+              "description": "Diversi ritocchi migliorano l’uso dei GPX importati e l’interfaccia sugli schermi piccoli.",
+              "details": [
+                "Dopo più importazioni GPX consecutive, l’inquadratura utilizza ora un livello di zoom nativo di swisstopo per evitare uno sfondo cartografico sfocato.",
+                "Sugli schermi piccoli, i pulsanti di zoom + e − sono nascosti, il profilo altimetrico rimane interamente visibile accanto ai controlli e il pannello dei livelli resta accessibile anche quando lo spazio disponibile è ridotto."
+              ],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.3.0",
+          "summary": "Questa versione riduce i dati scaricati durante la creazione degli itinerari.",
+          "items": [
+            {
+              "id": "optimizedRoutingDataLoading",
+              "title": "Caricamento ottimizzato dei dati di routing:",
+              "description": "Via Helvetica carica ora in modo più mirato le aree necessarie attorno a ogni segmento. Nei nostri test, il numero di riquadri di routing scaricati si è ridotto in media di circa il 50 %, senza modificare gli itinerari calcolati.",
+              "details": [
+                "L’area caricata inizia il più vicino possibile al segmento e si amplia automaticamente solo quando necessario.",
+                "I corridoi di routing precedenti restano disponibili come soluzione di ripiego quando il risultato non può essere convalidato in un’area più piccola."
+              ]
+            }
+          ]
+        },
+        {
+          "version": "1.2.0",
+          "summary": "Questa versione rende più rapida la creazione degli itinerari e migliora la leggibilità del profilo altimetrico.",
+          "items": [
+            {
+              "id": "fasterRouteCreation",
+              "title": "Creazione di itinerari più rapida:",
+              "description": "L’aggiunta e il ricalcolo dei segmenti sono ora più rapidi.",
+              "details": [
+                "Il calcolo degli itinerari utilizza ora dati precalcolati per tutta la Svizzera, caricati su richiesta attorno al percorso.",
+                "I servizi GeoAdmin restano disponibili come soluzione di riserva quando i dati precalcolati non possono essere utilizzati."
+              ]
+            },
+            {
+              "id": "elevationProfile",
+              "title": "Profilo altimetrico migliorato:",
+              "description": "La scala verticale si adatta meglio al rilievo e alla lunghezza dell’itinerario.",
+              "details": []
+            },
+            {
+              "id": "usageInformation",
+              "title": "Informazioni d’uso chiarite:",
+              "description": "La finestra «Informazioni» precisa ora che gli itinerari e i dati cartografici sono forniti a titolo indicativo e devono essere adattati alle condizioni incontrate.",
+              "details": [],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.1.0",
+          "summary": "Questa versione aggiunge la selezione degli itinerari SvizzeraMobile, la ricerca per coordinate e diversi miglioramenti dell’interfaccia.",
+          "items": [
+            {
+              "id": "switzerlandMobility",
+              "title": "Itinerari SvizzeraMobile:",
+              "description": "Il livello opzionale «A piedi SvizzeraMobile», attivabile dal menu dei livelli, consente di selezionare un itinerario, consultarne il profilo altimetrico ed esportarlo in formato GPX.",
+              "details": []
+            },
+            {
+              "id": "coordinateSearch",
+              "title": "Ricerca per coordinate:",
+              "description": "È ora possibile cercare un luogo tramite coordinate GPS decimali (WGS 84) o coordinate svizzere (LV95).",
+              "details": []
+            },
+            {
+              "id": "layerOpacity",
+              "title": "Opacità dei livelli:",
+              "description": "L’opacità dei livelli informativi può essere regolata per leggere meglio la carta sottostante.",
+              "details": []
+            },
+            {
+              "id": "distantWaypoints",
+              "title": "Punti di passaggio lontani:",
+              "description": "Quando un punto è troppo lontano per essere collegato dal calcolo automatico, un messaggio invita ad aggiungere un punto intermedio.",
+              "details": []
+            },
+            {
+              "id": "generalImprovements",
+              "title": "Miglioramenti generali:",
+              "description": "Lo spostamento dei punti, la visualizzazione dei pannelli informativi, il riepilogo dell’itinerario e l’esportazione GPX sono stati resi più fluidi.",
+              "details": [
+                "La carta si sposta automaticamente quando un punto dell’itinerario viene trascinato vicino al bordo dello schermo.",
+                "Le fermate, le chiusure e le zone di pericolo selezionate restano visibili accanto al relativo pannello informativo.",
+                "Le etichette del riepilogo dell’itinerario sono più leggibili e la selezione dei file di esportazione è limitata al formato GPX.",
+                "Gli indirizzi dedicati alle lingue (/fr/, /de/, /it/ e /en/) permettono di condividere la versione corretta e migliorano la visibilità nei motori di ricerca.",
+                "Altri ritocchi migliorano la visualizzazione delle finestre e dei controlli sugli schermi piccoli."
+              ],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.0.0",
+          "summary": "Prima versione pubblica di Via Helvetica: creazione e modifica di itinerari, routing sperimentale basato su swissTLM3D, profilo altimetrico, importazione ed esportazione GPX, chiusure, zone di pericolo e informazioni sui trasporti pubblici.",
+          "items": []
+        }
+      ]
+    },
+    "en": {
+      "dialog": {
+        "title": "What’s new in Via Helvetica 1.7.2",
+        "historyLink": "View full release history",
+        "historyLinkNewTabLabel": "opens in a new tab"
+      },
+      "page": {
+        "title": "Release history – Via Helvetica",
+        "description": "Explore the release history of the Via Helvetica Swiss hiking route planner.",
+        "heading": "Release history",
+        "intro": "Explore the main changes to Via Helvetica since its first public release.",
+        "backToApp": "Back to Via Helvetica",
+        "currentLabel": "Current version",
+        "languageNavigation": "Language",
+        "versionLabel": "Version"
+      },
+      "releases": [
+        {
+          "version": "1.7.2",
+          "summary": "This release brings small improvements to readability and localization.",
+          "items": [
+            {
+              "id": "clearerShootingNoticeTimes",
+              "title": "Clearer shooting-notice times:",
+              "description": "Shooting-notice times are now displayed with a colon between hours and minutes, for example 07:30 instead of 0730.",
+              "details": [],
+              "showInDialog": false
+            },
+            {
+              "id": "localizedDataSourceCredits",
+              "title": "Localized data-source credits:",
+              "description": "Data-source credits shown in “About Via Helvetica” are now displayed in the interface language.",
+              "details": [],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.7.1",
+          "summary": "This release optimizes how public-transport stops are loaded without changing how they are used on the map.",
+          "items": [
+            {
+              "id": "publicTransportStaticCatalog",
+              "title": "Optimized public-transport stop loading:",
+              "description": "Via Helvetica now loads stop positions from a compact national catalog prepared from official FOT data, avoiding repeated network requests while the map is moved.",
+              "details": [
+                "The catalog is downloaded only when the stop layer is active at a zoom level where stops can be displayed, then reused locally for the rest of the session.",
+                "Upcoming departures are still fetched on demand when a stop is selected.",
+                "The catalog is published at an immutable URL and can be updated separately when FOT publishes a new edition of the data."
+              ],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.7.0",
+          "summary": "This release improves public-transport map readability and brings information found under the same map click into one chooser, while adding desktop coordinate and elevation inspection.",
+          "items": [
+            {
+              "id": "clearerMapInformation",
+              "title": "Clearer public transport and map information:",
+              "description": "Public-transport stops are now decluttered at lower and medium zoom levels to keep the map readable. When the same click matches several information objects, Via Helvetica brings them together in a common chooser.",
+              "details": [
+                "More stops progressively reappear as you zoom in, while very close stops keep a small visual fan-out so they remain individually selectable.",
+                "Stops hidden to reduce map clutter remain accessible through a nearby visible stop.",
+                "The common chooser can combine closures or detours, danger zones, public-transport stops and Hiking SwitzerlandMobility routes, with safety information shown first.",
+                "Distinct pictograms make the different information types easier to identify."
+              ]
+            },
+            {
+              "id": "desktopPositionInspection",
+              "title": "Coordinates and elevation on right-click:",
+              "description": "On desktop, right-clicking the map places a temporary point and shows its WGS 84 and LV95 coordinates together with terrain elevation, without interrupting the current itinerary.",
+              "details": [
+                "WGS 84 and LV95 coordinates can be copied directly from the panel.",
+                "A new right-click moves the point and replaces the previous inspection.",
+                "The current itinerary and the open or closed state of its elevation profile are preserved during inspection.",
+                "If needed, the map pans slightly without changing zoom so the inspected point remains visible beside the panel."
+              ]
+            }
+          ]
+        },
+        {
+          "version": "1.6.0",
+          "summary": "This release significantly improves the mobile experience while keeping Via Helvetica primarily a route-planning tool designed for large screens.",
+          "items": [
+            {
+              "id": "refinedMobileExperience",
+              "title": "Redesigned mobile experience:",
+              "description": "The interface on smaller screens has been extensively refined to leave more room for the map and make essential actions smoother: full-screen search, a Map and options panel, adapted information panels, full-width profiles and statistics, and a map-only mode. Via Helvetica nevertheless remains designed primarily for planning routes on large screens.",
+              "details": [
+                "Editing controls are more compact, and search now opens full-screen on mobile.",
+                "The “Map and options” panel brings together base maps, information layers, language selection and access to “About Via Helvetica”, reducing permanent controls over the map.",
+                "Information panels, the elevation profile, route statistics and SwitzerlandMobility panels make better use of the available width and scroll naturally when their content is longer.",
+                "Outside route editing, tapping an empty area of the map temporarily hides controls and panels so the map can be examined freely; a second tap restores the same interface."
+              ]
+            },
+            {
+              "id": "persistentRouteExport",
+              "title": "Export stays available:",
+              "description": "The export button now remains visible as long as a route is displayed, even after leaving creation or editing mode. It disappears only when no current route is selected.",
+              "details": []
+            }
+          ]
+        },
+        {
+          "version": "1.5.0",
+          "summary": "This release makes imported GPX files editable and brings route export actions together in one place.",
+          "items": [
+            {
+              "id": "editableImportedGpx",
+              "title": "Editable imported GPX files:",
+              "description": "A GPX file is still loaded as read-only first. A pencil button then appears to the right of the route summary and can make it editable without rerouting or simplifying the original geometry.",
+              "details": [
+                "During conversion, Via Helvetica places anchors on existing GPX vertices, targeting roughly one anchor per kilometre and using closer spacing for short routes.",
+                "The GPX geometry stays unchanged until it is edited; moving or inserting a point recalculates only the affected sections.",
+                "To keep the map readable, the number of visible handles adapts to the zoom level without removing anchors from the route.",
+                "As long as the converted route remains unchanged, export preserves the original GPX document. After an edit, Via Helvetica generates a new GPX while retaining the vertices of untouched imported sections.",
+                "In this first version, editing is available for continuous GPX tracks inside the supported map extent with at most 20,000 vertices."
+              ]
+            },
+            {
+              "id": "sharedSwitzerlandMobilityExport",
+              "title": "Unified SwitzerlandMobility export:",
+              "description": "When a Hiking SwitzerlandMobility route is selected, it now uses the same export button on the right side of the map as created routes and imported GPX files.",
+              "details": [
+                "The export button has been removed from the SwitzerlandMobility detail panel so route exports are available from one consistent location.",
+                "The shared button appears only when an exportable SwitzerlandMobility route is actually selected."
+              ]
+            }
+          ]
+        },
+        {
+          "version": "1.4.0",
+          "summary": "This release makes it easier to transfer routes to the swisstopo app and reduces the size of exported GPX files.",
+          "items": [
+            {
+              "id": "swisstopoTransfer",
+              "title": "Transfer to the swisstopo app:",
+              "description": "On desktop, a QR code can now open the current route in the swisstopo app. Sharing is also available for imported GPX files.",
+              "details": [
+                "The export and sharing control was moved so it remains available for both routes created in Via Helvetica and GPX files loaded as read-only references.",
+                "On mobile, the transfer opens directly in the swisstopo app without using a QR code.",
+                "To enable the transfer, the GPX file is hosted temporarily for 24 hours in dedicated storage, only after an explicit user action, without being associated with the user's identity."
+              ]
+            },
+            {
+              "id": "compactGpxExport",
+              "title": "More compact GPX files:",
+              "description": "GPX files generated by Via Helvetica are now minified, reducing file size without changing coordinates, elevations, or useful metadata.",
+              "details": []
+            },
+            {
+              "id": "interfaceRefinements",
+              "title": "Refined interface and display:",
+              "description": "Several small adjustments improve imported GPX handling and the interface on smaller screens.",
+              "details": [
+                "After successive GPX imports, the map fit now uses a native swisstopo zoom level to avoid a blurred map background.",
+                "On small screens, the + and − zoom buttons are hidden, the elevation profile remains fully visible beside the controls, and the layers panel stays accessible when space is limited."
+              ],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.3.0",
+          "summary": "This release reduces the data downloaded while creating routes.",
+          "items": [
+            {
+              "id": "optimizedRoutingDataLoading",
+              "title": "Optimized routing data loading:",
+              "description": "Via Helvetica now loads the areas needed around each route segment more precisely. In our tests, this reduced the number of downloaded routing tiles by about 50% on average, without changing the calculated routes.",
+              "details": [
+                "The loaded area starts as close to the route segment as possible and expands automatically only when needed.",
+                "The previous routing corridors remain available as a fallback when the result cannot be validated within a smaller area."
+              ]
+            }
+          ]
+        },
+        {
+          "version": "1.2.0",
+          "summary": "This release makes route creation faster and improves the readability of the elevation profile.",
+          "items": [
+            {
+              "id": "fasterRouteCreation",
+              "title": "Faster route creation:",
+              "description": "Adding and recalculating route sections is now more responsive.",
+              "details": [
+                "Routing now uses precomputed data for all of Switzerland, loaded on demand around the route.",
+                "GeoAdmin services remain available as a fallback when the precomputed data cannot be used."
+              ]
+            },
+            {
+              "id": "elevationProfile",
+              "title": "Improved elevation profile:",
+              "description": "The vertical scale now adapts better to the terrain and route length.",
+              "details": []
+            },
+            {
+              "id": "usageInformation",
+              "title": "Clearer usage information:",
+              "description": "The About dialog now makes it clearer that routes and map data are provided for guidance and must be adapted to the conditions encountered.",
+              "details": [],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.1.0",
+          "summary": "This release adds SwitzerlandMobility route selection, coordinate search, and several interface improvements.",
+          "items": [
+            {
+              "id": "switzerlandMobility",
+              "title": "SwitzerlandMobility routes:",
+              "description": "The optional “Hiking SwitzerlandMobility” layer can be enabled from the layer menu, then used to select a route, inspect its elevation profile, and export it as GPX.",
+              "details": []
+            },
+            {
+              "id": "coordinateSearch",
+              "title": "Coordinate search:",
+              "description": "You can now search for a place using decimal GPS coordinates (WGS 84) or Swiss coordinates (LV95).",
+              "details": []
+            },
+            {
+              "id": "layerOpacity",
+              "title": "Layer opacity:",
+              "description": "Information-layer opacity can be adjusted to keep the underlying map easier to read.",
+              "details": []
+            },
+            {
+              "id": "distantWaypoints",
+              "title": "Distant waypoints:",
+              "description": "When a point is too far away for automatic routing, a message asks you to add an intermediate waypoint.",
+              "details": []
+            },
+            {
+              "id": "generalImprovements",
+              "title": "General improvements:",
+              "description": "Waypoint dragging, information panels, the route summary, and GPX export have all been made smoother.",
+              "details": [
+                "The map now pans automatically when a route point is dragged near the edge of the screen.",
+                "Selected stops, closures, and danger zones remain visible beside their information panel.",
+                "Route-summary labels are easier to read, and the export file picker is limited to the supported GPX format.",
+                "Dedicated language paths (/fr/, /de/, /it/, and /en/) keep shared links in the selected language and improve search visibility.",
+                "Additional adjustments improve dialogs and controls on small screens."
+              ],
+              "showInDialog": false
+            }
+          ]
+        },
+        {
+          "version": "1.0.0",
+          "summary": "First public release of Via Helvetica: route creation and editing, experimental swissTLM3D routing, elevation profiles, GPX import and export, closures, danger zones, and public-transport information.",
+          "items": []
+        }
+      ]
+    }
+  }
+}
