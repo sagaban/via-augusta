@@ -33,3 +33,6 @@ Thumbs.db
 /public/robots.txt
 /public/sitemap.xml
 /index.html
+
+# pnpm is the package manager; keep a stray `npm install` out of the repo
+package-lock.json

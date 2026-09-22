@@ -22,10 +22,10 @@ Todo corre en el navegador: no hay cuentas, ni base de datos, ni backend propio.
 Requiere Node.js 20.19+ o 22.12+.
 
 ```bash
-npm install
-npm run dev      # http://localhost:5173/
-npm test
-npm run build
+pnpm install
+pnpm dev          # http://localhost:5173/
+pnpm test
+pnpm build
 ```
 
 No hace falta configurar nada para desarrollar. Las variables opcionales están en

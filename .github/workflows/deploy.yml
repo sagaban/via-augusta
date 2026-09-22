@@ -29,17 +29,21 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v5
 
+      # Uses the version pinned by "packageManager" in package.json.
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Set up Node.js
         uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Run regression tests
-        run: npm test
+        run: pnpm test
 
       # Provides the Pages URL and base path: "/<repo>" for a project site,
       # empty for a custom domain or a user/organization site.
@@ -48,7 +52,7 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Build application
-        run: npm run build
+        run: pnpm build
         env:
           VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}/
           VITE_SITE_URL: ${{ steps.pages.outputs.base_url }}/
