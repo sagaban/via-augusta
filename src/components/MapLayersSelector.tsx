@@ -48,26 +48,10 @@ interface MapLayersSelectorProps {
   baseMapStyle: BaseMapStyle;
   /** Replaces the current background while preserving all overlays. */
   onBaseMapChange: (style: BaseMapStyle) => void;
-  /** Whether official hiking trails are currently visible. */
+  /** Whether the hiking-route overlay is currently visible. */
   areHikingTrailsVisible: boolean;
-  /** Shows or hides the official hiking-trail overlay. */
+  /** Shows or hides the hiking-route overlay. */
   onHikingTrailsChange: (isVisible: boolean) => void;
-  /** Whether official SwitzerlandMobility hiking routes are visible. */
-  isSwitzerlandMobilityHikingVisible: boolean;
-  /** Shows or hides official SwitzerlandMobility hiking routes. */
-  onSwitzerlandMobilityHikingChange: (isVisible: boolean) => void;
-  /** Whether official hiking closures and detours are currently visible. */
-  areTrailClosuresVisible: boolean;
-  /** Shows or hides the official closure overlay. */
-  onTrailClosuresChange: (isVisible: boolean) => void;
-  /** Whether official shooting notices and danger zones are visible. */
-  areShootingDangerZonesVisible: boolean;
-  /** Shows or hides the official military danger-zone overlay. */
-  onShootingDangerZonesChange: (isVisible: boolean) => void;
-  /** Whether official public-transport stops are currently visible. */
-  arePublicTransportStopsVisible: boolean;
-  /** Shows or hides the official stop overlay. */
-  onPublicTransportStopsChange: (isVisible: boolean) => void;
   /** Current persisted opacity ratio for every optional information layer. */
   layerOpacities: MapLayerOpacities;
   /** Changes and persists one optional information-layer opacity. */
@@ -95,12 +79,7 @@ interface OverlayLayerOption {
   /** Stable key used to read and update the layer's persisted opacity. */
   layer: MapLayerOpacityKey;
   /** Translation key displayed as the overlay row label. */
-  labelKey:
-    | 'hikingTrails.layer'
-    | 'switzerlandMobilityHiking.layer'
-    | 'closures.layer'
-    | 'shootingDangerZones.layer'
-    | 'transportStops.layer';
+  labelKey: 'hikingTrails.layer';
   /** Whether the corresponding OpenLayers information layer is displayed. */
   isVisible: boolean;
   /** Shows or hides the layer without changing its stored opacity. */
@@ -135,9 +114,7 @@ const BASE_MAP_OPTIONS: BaseMapOption[] = [
 
 /** Full language names keep the compact mobile choices accessible to screen readers. */
 const LANGUAGE_LABEL_KEYS: Record<Language, TranslationKey> = {
-  fr: 'language.fr',
-  de: 'language.de',
-  it: 'language.it',
+  es: 'language.es',
   en: 'language.en',
 };
 
@@ -271,14 +248,6 @@ export default function MapLayersSelector({
   onBaseMapChange,
   areHikingTrailsVisible,
   onHikingTrailsChange,
-  isSwitzerlandMobilityHikingVisible,
-  onSwitzerlandMobilityHikingChange,
-  areTrailClosuresVisible,
-  onTrailClosuresChange,
-  areShootingDangerZonesVisible,
-  onShootingDangerZonesChange,
-  arePublicTransportStopsVisible,
-  onPublicTransportStopsChange,
   layerOpacities,
   onLayerOpacityChange,
   onOpen,
@@ -338,30 +307,6 @@ export default function MapLayersSelector({
       isVisible: areHikingTrailsVisible,
       onVisibilityChange: onHikingTrailsChange,
     },
-    {
-      layer: 'switzerlandMobilityHiking',
-      labelKey: 'switzerlandMobilityHiking.layer',
-      isVisible: isSwitzerlandMobilityHikingVisible,
-      onVisibilityChange: onSwitzerlandMobilityHikingChange,
-    },
-    {
-      layer: 'trailClosures',
-      labelKey: 'closures.layer',
-      isVisible: areTrailClosuresVisible,
-      onVisibilityChange: onTrailClosuresChange,
-    },
-    {
-      layer: 'shootingDangerZones',
-      labelKey: 'shootingDangerZones.layer',
-      isVisible: areShootingDangerZonesVisible,
-      onVisibilityChange: onShootingDangerZonesChange,
-    },
-    {
-      layer: 'publicTransportStops',
-      labelKey: 'transportStops.layer',
-      isVisible: arePublicTransportStopsVisible,
-      onVisibilityChange: onPublicTransportStopsChange,
-    },
   ];
 
   useEffect(() => {
@@ -380,11 +325,7 @@ export default function MapLayersSelector({
     }
   }, [
     areHikingTrailsVisible,
-    arePublicTransportStopsVisible,
-    areShootingDangerZonesVisible,
-    areTrailClosuresVisible,
     expandedOpacityLayer,
-    isSwitzerlandMobilityHikingVisible,
   ]);
 
   return (

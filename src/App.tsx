@@ -12,20 +12,14 @@ import ReleaseNotesDialog from './components/ReleaseNotesDialog';
 import MapLayersSelector from './components/MapLayersSelector';
 import LanguageSelector from './components/LanguageSelector';
 import LocationSearch from './components/LocationSearch';
-import MapInformationChoicePanel from './components/MapInformationChoicePanel';
 import MapPositionPanel from './components/MapPositionPanel';
 import RouteImportControl from './components/RouteImportControl';
 import RouteControls from './components/RouteControls';
 import RouteExportDialog from './components/RouteExportDialog';
-import PublicTransportStopPopup from './components/PublicTransportStopPopup';
-import ShootingDangerZonePopup from './components/ShootingDangerZonePopup';
-import TrailClosurePopup from './components/TrailClosurePopup';
-import SwitzerlandMobilityHikingPanel from './components/SwitzerlandMobilityHikingPanel';
 import RouteStatistics from './components/RouteStatistics';
 import {
   createNamedImportedGpxDocument,
   createRouteGpx,
-  createRouteSegmentsGpx,
   downloadGpxDocument,
 } from './export/gpx';
 import {
@@ -35,11 +29,6 @@ import {
   type EditableImportedRouteExportOrigin,
 } from './export/itineraryExportSource';
 import { useI18n } from './i18n/I18nContext';
-import {
-  createSwisstopoShare,
-  isSwisstopoShareConfigured,
-  type SwisstopoShare,
-} from './share/swisstopoShare';
 import {
   COORDINATE_SEARCH_ZOOM,
   isWgs84CoordinateInsideMapBounds,
@@ -55,10 +44,6 @@ import {
 } from './map/importedRouteConversion';
 import { useEditableRoute } from './map/useEditableRoute';
 import { useImportedRoute } from './map/useImportedRoute';
-import {
-  resolveInitialMapInformationLayerVisibility,
-  useMapInformationLayers,
-} from './map/useMapInformationLayers';
 import { useMapRuntime } from './map/useMapRuntime';
 import { ensureMapInformationCoordinateVisible } from './map/mapInformationViewport';
 import { useMapPositionInspection } from './map/useMapPositionInspection';
@@ -68,7 +53,6 @@ import {
 } from './map/useMapLayerOpacities';
 import {
   resolveInitialHikingTrailsVisibility,
-  resolveInitialSwitzerlandMobilityHikingVisibility,
   useMapViewControls,
 } from './map/useMapViewControls';
 import {
@@ -85,7 +69,7 @@ import {
 } from './releases/releaseHistory';
 
 /** Itinerary source named by the shared GPX export dialog. */
-type RouteExportSource = 'editable' | 'imported' | 'switzerlandMobility';
+type RouteExportSource = 'editable' | 'imported';
 
 /**
  * Matches the CSS breakpoint where the map can temporarily own the whole phone viewport.
@@ -161,14 +145,6 @@ export default function App() {
     resolveInitialHikingTrailsVisibility,
     [],
   );
-  const initialSwitzerlandMobilityHikingVisibility = useMemo(
-    resolveInitialSwitzerlandMobilityHikingVisibility,
-    [],
-  );
-  const initialMapInformationVisibility = useMemo(
-    resolveInitialMapInformationLayerVisibility,
-    [],
-  );
   const initialMapLayerOpacities = useMemo(
     resolveInitialMapLayerOpacities,
     [],
@@ -182,13 +158,6 @@ export default function App() {
     fullscreenElementRef: appRef,
     initialVisibility: {
       hikingTrails: initialHikingTrailsVisibility,
-      switzerlandMobilityHiking:
-        initialSwitzerlandMobilityHikingVisibility,
-      trailClosures: initialMapInformationVisibility.trailClosures,
-      shootingDangerZones:
-        initialMapInformationVisibility.shootingDangerZones,
-      publicTransportStops:
-        initialMapInformationVisibility.publicTransportStops,
     },
     initialOpacity: initialMapLayerOpacities,
   });
@@ -210,8 +179,6 @@ export default function App() {
     setBaseMapStyle,
     areHikingTrailsVisible,
     setAreHikingTrailsVisible,
-    isSwitzerlandMobilityHikingVisible,
-    setIsSwitzerlandMobilityHikingVisible,
     locationStatus,
     locationMessage,
     locationButtonLabel,
@@ -223,7 +190,6 @@ export default function App() {
     mapRuntimeRef,
     fullscreenElementRef: appRef,
     initialHikingTrailsVisibility,
-    initialSwitzerlandMobilityHikingVisibility,
     isFullscreen,
     t,
   });
@@ -257,11 +223,6 @@ export default function App() {
     return true;
   }, []);
 
-  /** A real information selection always brings the temporarily hidden phone UI back. */
-  const handleMapInformationSelected = useCallback(() => {
-    setIsMobileMapUiHidden(false);
-    clearSelectedSearchResult();
-  }, [clearSelectedSearchResult]);
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') {
@@ -442,18 +403,6 @@ export default function App() {
     t,
   ]);
 
-  /** Makes one validated public route the sole current itinerary. */
-  const handleSwitzerlandMobilityHikingRouteAccepted = useCallback(() => {
-    clearSelectedSearchResult();
-    clearImportedRoute();
-    setEditableImportedRouteOrigin(null);
-    replaceWithReadOnlyItinerary();
-  }, [
-    clearImportedRoute,
-    clearSelectedSearchResult,
-    replaceWithReadOnlyItinerary,
-  ]);
-
   const previousRouteStepCountRef = useRef(routeHistory.steps.length);
 
   useEffect(() => {
@@ -507,43 +456,30 @@ export default function App() {
     setEditableImportedRouteOrigin(null);
   }, [deleteRoute]);
 
-  const {
-    areTrailClosuresVisible,
-    setAreTrailClosuresVisible,
-    areShootingDangerZonesVisible,
-    setAreShootingDangerZonesVisible,
-    arePublicTransportStopsVisible,
-    setArePublicTransportStopsVisible,
-    trailClosurePopup,
-    shootingDangerZonePopup,
-    publicTransportStopPopup,
-    mapInformationChoices,
-    selectMapInformationChoice,
-    switzerlandMobilityHikingPanel,
-    switzerlandMobilityHikingMapHoverDistanceMeters,
-    handleSwitzerlandMobilityHikingProfileHoverDistanceChange,
-    clearInformationContext,
-    closeMapInformationPopup,
-    dismissSwitzerlandMobilityHikingPanel,
-  } = useMapInformationLayers({
-    mapRuntimeRef,
-    initialVisibility: initialMapInformationVisibility,
-    language,
-    isSwitzerlandMobilityHikingVisible,
-    isRouteCreationActive,
-    onMapClickStart: handleMapClickStart,
-    onInformationSelected: handleMapInformationSelected,
-    onSwitzerlandMobilityHikingRouteAccepted:
-      handleSwitzerlandMobilityHikingRouteAccepted,
-  });
+  useEffect(() => {
+    const map = mapRuntimeRef.current?.map;
+
+    if (!map) {
+      return;
+    }
+
+    // Outside route editing, an empty phone-map tap toggles the map-only view.
+    const handleMapClick = () => {
+      if (!isRouteCreationActive) {
+        handleMapClickStart();
+      }
+    };
+
+    map.on('singleclick', handleMapClick);
+    return () => {
+      map.un('singleclick', handleMapClick);
+    };
+  }, [handleMapClickStart, isRouteCreationActive, mapRuntimeRef, status]);
 
   const handleMapPositionOpen = useCallback(() => {
-    // Right-click inspection is informational: clear competing transient details
-    // without destroying the current SwitzerlandMobility itinerary. Its panel is
-    // hidden temporarily below while the position panel owns the lower map area.
-    clearInformationContext();
+    // Right-click inspection is informational and must not replace the itinerary.
     clearSelectedSearchResult();
-  }, [clearInformationContext, clearSelectedSearchResult]);
+  }, [clearSelectedSearchResult]);
 
   const {
     inspection: mapPositionInspection,
@@ -606,9 +542,8 @@ export default function App() {
   }, [mapPositionInspectionCoordinate, mapRuntimeRef]);
 
   const closeTransientMapInformation = useCallback(() => {
-    closeMapInformationPopup();
     closeMapPositionInspection();
-  }, [closeMapInformationPopup, closeMapPositionInspection]);
+  }, [closeMapPositionInspection]);
 
   useEffect(() => {
     if (isRouteCreationActive) {
@@ -636,20 +571,16 @@ export default function App() {
         ? editableImportedRouteOrigin?.elevationSummary ?? null
         : null),
     isRoutePointerInteractionActive,
-    // The selected public route owns the shared black marker and profile cursor
-    // while it is the current read-only itinerary.
-    isProfileInteractionEnabled:
-      switzerlandMobilityHikingPanel === null,
+    isProfileInteractionEnabled: true,
     isPointerInteractionActive,
     isRouteOperationPending,
   });
 
   /** Opens project information after dismissing any map-feature popup behind it. */
   const openAboutDialog = useCallback(() => {
-    closeMapInformationPopup();
     closeMapPositionInspection();
     setIsAboutDialogOpen(true);
-  }, [closeMapInformationPopup, closeMapPositionInspection]);
+  }, [closeMapPositionInspection]);
 
   /** Acknowledges the current release before dismissing its one-time dialog. */
   const closeReleaseNotesDialog = useCallback(() => {
@@ -683,7 +614,7 @@ export default function App() {
     updateSearchResultMarker(marker, coordinate);
 
     const isCoordinateResult =
-      result.origin === 'wgs84' || result.origin === 'lv95';
+      result.origin === 'wgs84' || result.origin === 'utm';
 
     // A coordinate denotes an exact point, unlike a locality or postal-code
     // result, so it uses the same close planning scale as explicit geolocation.
@@ -698,30 +629,6 @@ export default function App() {
 
   /** Opens the shared export/share dialog for whichever itinerary is current. */
   const requestCurrentItineraryExport = () => {
-    if (switzerlandMobilityHikingPanel?.state === 'ready') {
-      const route = switzerlandMobilityHikingPanel.route;
-      const baseName = route.routeName
-        ?? (route.routeNumber
-          ? t('switzerlandMobilityHiking.routeNumber', {
-              number: route.routeNumber,
-            })
-          : t('switzerlandMobilityHiking.unnamedRoute'));
-      const stageName = route.stageNumber
-        ? `${baseName} — ${t('switzerlandMobilityHiking.stage', {
-            number: route.stageNumber,
-          })}`
-        : baseName;
-
-      setRouteExportDefaultName(
-        route.sectionName
-          ? `${stageName} — ${route.sectionName}`
-          : stageName,
-      );
-      setRouteExportSource('switzerlandMobility');
-      setIsRouteExportDialogOpen(true);
-      return;
-    }
-
     const source = resolveItineraryExportSource({
       importedRouteSource,
       editableImportedRouteOrigin,
@@ -750,8 +657,7 @@ export default function App() {
 
   /**
    * Builds the GPX document for the export source selected when the dialog opened.
-   * The same document is used for local download and the optional swisstopo hand-off
-   * so both actions preserve the same pristine/imported versus generated semantics.
+   * Imported GPX sources keep their exact XML while still pristine.
    *
    * @param routeName - User-confirmed name written into the exported GPX.
    * @returns Complete GPX XML for the selected current itinerary source.
@@ -760,19 +666,6 @@ export default function App() {
    */
   const createCurrentRouteGpxDocument = (routeName: string): string => {
     const generatedAt = new Date();
-
-    if (routeExportSource === 'switzerlandMobility') {
-      if (switzerlandMobilityHikingPanel?.state !== 'ready') {
-        throw new Error('The selected SwitzerlandMobility route is unavailable.');
-      }
-
-      return createRouteSegmentsGpx(
-        switzerlandMobilityHikingPanel.route.segments,
-        generatedAt,
-        routeName,
-        switzerlandMobilityHikingPanel.elevation?.points ?? [],
-      );
-    }
 
     if (routeExportSource === 'imported') {
       const source = resolveExactImportedRouteSource(
@@ -806,7 +699,7 @@ export default function App() {
     );
   };
 
-  /** Downloads the exact GPX document also used by the swisstopo transfer. */
+  /** Downloads the GPX document for the current itinerary. */
   const exportRoute = (routeName: string) => {
     try {
       downloadGpxDocument(
@@ -821,14 +714,6 @@ export default function App() {
         'error',
       );
     }
-  };
-
-  /** Uploads the named GPX only on explicit request and returns its QR hand-off. */
-  const shareRouteWithSwisstopo = async (
-    routeName: string,
-  ): Promise<SwisstopoShare> => {
-    const gpxDocument = createCurrentRouteGpxDocument(routeName);
-    return createSwisstopoShare(gpxDocument);
   };
 
   return (
@@ -928,19 +813,15 @@ export default function App() {
         </button>
 
         {/* Export follows the current itinerary, not whether route editing is active. */}
-        {(routeHistory.steps.length > 0 ||
-          importedRouteSource ||
-          switzerlandMobilityHikingPanel?.state === 'ready') && (
+        {(routeHistory.steps.length > 0 || importedRouteSource) && (
           <button
             type="button"
             className="map-control-button map-control-button--route-export"
             aria-label={t('route.export')}
             title={t('route.export')}
             disabled={
-              switzerlandMobilityHikingPanel?.state === 'ready'
-                ? switzerlandMobilityHikingPanel.elevationStatus === 'loading'
-                : !importedRouteSource &&
-                  (isRouteOperationPending || routeHistory.steps.length < 2)
+              !importedRouteSource &&
+              (isRouteOperationPending || routeHistory.steps.length < 2)
             }
             onClick={requestCurrentItineraryExport}
           >
@@ -963,18 +844,6 @@ export default function App() {
           onBaseMapChange={setBaseMapStyle}
           areHikingTrailsVisible={areHikingTrailsVisible}
           onHikingTrailsChange={setAreHikingTrailsVisible}
-          isSwitzerlandMobilityHikingVisible={
-            isSwitzerlandMobilityHikingVisible
-          }
-          onSwitzerlandMobilityHikingChange={
-            setIsSwitzerlandMobilityHikingVisible
-          }
-          areTrailClosuresVisible={areTrailClosuresVisible}
-          onTrailClosuresChange={setAreTrailClosuresVisible}
-          areShootingDangerZonesVisible={areShootingDangerZonesVisible}
-          onShootingDangerZonesChange={setAreShootingDangerZonesVisible}
-          arePublicTransportStopsVisible={arePublicTransportStopsVisible}
-          onPublicTransportStopsChange={setArePublicTransportStopsVisible}
           layerOpacities={layerOpacities}
           onLayerOpacityChange={setLayerOpacity}
           onOpen={closeTransientMapInformation}
@@ -1091,35 +960,6 @@ export default function App() {
         )}
       </nav>
 
-      {trailClosurePopup && (
-        <TrailClosurePopup
-          status={trailClosurePopup}
-          onClose={closeMapInformationPopup}
-        />
-      )}
-
-      {shootingDangerZonePopup && (
-        <ShootingDangerZonePopup
-          status={shootingDangerZonePopup}
-          onClose={closeMapInformationPopup}
-        />
-      )}
-
-      {publicTransportStopPopup && (
-        <PublicTransportStopPopup
-          status={publicTransportStopPopup}
-          onClose={closeMapInformationPopup}
-        />
-      )}
-
-      {mapInformationChoices && (
-        <MapInformationChoicePanel
-          choices={mapInformationChoices}
-          onSelectChoice={selectMapInformationChoice}
-          onClose={closeMapInformationPopup}
-        />
-      )}
-
       {mapPositionInspection && (
         <MapPositionPanel
           inspection={mapPositionInspection}
@@ -1127,23 +967,7 @@ export default function App() {
         />
       )}
 
-      {switzerlandMobilityHikingPanel &&
-        !mapInformationChoices && (
-        <SwitzerlandMobilityHikingPanel
-          status={switzerlandMobilityHikingPanel}
-          onProfileHoverDistanceChange={
-            handleSwitzerlandMobilityHikingProfileHoverDistanceChange
-          }
-          routeHoverDistanceMeters={
-            switzerlandMobilityHikingMapHoverDistanceMeters
-          }
-          onClose={dismissSwitzerlandMobilityHikingPanel}
-        />
-      )}
-
-      {activeRouteSegments.length > 0 &&
-        !switzerlandMobilityHikingPanel &&
-        !mapInformationChoices && (
+      {activeRouteSegments.length > 0 && (
           <RouteStatistics
             distanceMeters={routeDistanceMeters}
             elevationStatus={routeElevationStatus}
@@ -1193,10 +1017,8 @@ export default function App() {
       <RouteExportDialog
         isOpen={isRouteExportDialogOpen}
         defaultName={routeExportDefaultName}
-        canShareWithSwisstopo={isSwisstopoShareConfigured()}
         onCancel={() => setIsRouteExportDialogOpen(false)}
         onExportGpx={exportRoute}
-        onCreateSwisstopoShare={shareRouteWithSwisstopo}
       />
 
       {status === 'loading' && (

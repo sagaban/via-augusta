@@ -1,7 +1,7 @@
 /**
  * Business context: owns the complete editable-itinerary workflow around the
  * OpenLayers route display. It keeps immutable route history, serializes
- * swissTLM3D routing work, and exposes undoable semantic route mutations while
+ * BRouter routing work, and exposes undoable semantic route mutations while
  * delegating pointer gesture lifecycles to a focused interaction hook. The root
  * application does not manage routing sessions or stale network responses.
  */
@@ -17,9 +17,9 @@ import type { Coordinate } from 'ol/coordinate.js';
 import type { TranslationKey } from '../i18n/translations';
 import { isAbortedRequest } from '../network/abort';
 import {
-  DynamicRoutingNetworkLoader,
-  RoutingAreaTooLargeError,
-} from '../routing/dynamicRoutingNetwork';
+  BRouterRoutingLoader,
+  type RoutingLoader,
+} from '../routing/brouterRouting';
 import {
   connectRoutedSegmentEndpoint,
   createStraightRouteClosure,
@@ -76,7 +76,7 @@ export interface EditableRouteController {
   routeCoordinates: Coordinate[];
   /** Whether map clicks currently create or reshape the editable route. */
   isRouteCreationActive: boolean;
-  /** Whether new and rebuilt sections attempt swissTLM3D snapping. */
+  /** Whether new and rebuilt sections attempt BRouter snapping. */
   isRouteSnapEnabled: boolean;
   /** Whether one serialized routing mutation is still pending. */
   isRouteOperationPending: boolean;
@@ -131,12 +131,12 @@ interface AsyncRouteMutationOptions {
   restoreDisplayOnError?: boolean;
   /** Builds the next immutable state from the shared routing loader. */
   calculate: (
-    loader: DynamicRoutingNetworkLoader,
+    loader: RoutingLoader,
     signal: AbortSignal,
   ) => Promise<RouteState>;
 }
 
-/** Pair of intended LV95 endpoints checked before a network-backed edit. */
+/** Pair of intended endpoints checked before a network-backed edit. */
 type RouteSectionEndpoints = readonly [Coordinate, Coordinate];
 
 /** Duration in milliseconds for actionable route errors before auto-dismissal. */
@@ -154,7 +154,7 @@ function createEmptyRouteHistory(): RouteHistory {
 
 /**
  * Coordinates editable route history, OpenLayers interactions, and dynamic
- * swissTLM3D requests as one application capability.
+ * BRouter requests as one application capability.
  *
  * @param options - Shared map runtime and cross-workflow callbacks.
  * @returns Render state and stable actions consumed by the application shell.
@@ -167,7 +167,7 @@ export function useEditableRoute(
   const routeCreationActiveRef = useRef(false);
   const routeCreationSessionRef = useRef(0);
   const routeOperationPendingRef = useRef(false);
-  const routingLoaderRef = useRef<DynamicRoutingNetworkLoader | null>(null);
+  const routingLoaderRef = useRef<BRouterRoutingLoader | null>(null);
   const routingAbortControllerRef = useRef<AbortController | null>(null);
   /** Latest translation helper read by the long-lived routing notice listener. */
   const translationRef = useRef(options.t);
@@ -241,7 +241,7 @@ export function useEditableRoute(
 
   /**
    * Rejects an ambiguous network edit synchronously, before pending UI state or
-   * Worker creation. The routing functions repeat the same check defensively so
+   * client creation. The routing functions repeat the same check defensively so
    * future callers cannot bypass the product rule.
    */
   const rejectOverlongNetworkSections = useCallback(
@@ -378,14 +378,6 @@ export function useEditableRoute(
             return;
           }
 
-          if (error instanceof RoutingAreaTooLargeError) {
-            showTemporaryRouteMessage(
-              options.t('route.areaTooLarge'),
-              'error',
-            );
-            return;
-          }
-
           console.error(mutation.errorContext, error);
           showTemporaryRouteMessage(
             options.t('route.networkLoadError'),
@@ -464,7 +456,7 @@ export function useEditableRoute(
 
       runAsyncRouteMutation({
         expectedState,
-        errorContext: 'Unable to load or route on swissTLM3D.',
+        errorContext: 'Unable to route with BRouter.',
         calculate: async (routingLoader, signal) => {
           let step: RouteStep;
 
@@ -976,23 +968,17 @@ export function useEditableRoute(
   }, [options.mapRuntimeRef, routeHistory.closure, routeHistory.steps]);
 
   useEffect(() => {
-    // The Worker and its notice subscription belong to the same effect lifetime.
+    // The routing client and its notice subscription belong to the same effect lifetime.
     // React Strict Mode intentionally runs setup, cleanup, then setup again in
-    // development; recreating both here prevents a fresh Worker from losing its
+    // development; recreating both here prevents a fresh client from losing its
     // listener after that lifecycle check.
-    const routingLoader = new DynamicRoutingNetworkLoader();
+    const routingLoader = new BRouterRoutingLoader();
     routingLoaderRef.current = routingLoader;
 
-    const unsubscribeFromNotices = routingLoader.subscribeToNotices((notice) => {
-      if (notice === 'hiking-enrichment-unavailable') {
-        showTemporaryRouteMessage(
-          translationRef.current('route.hikingEnrichmentUnavailable'),
-        );
-      } else if (notice === 'precomputed-routing-unavailable') {
-        showTemporaryRouteMessage(
-          translationRef.current('route.precomputedRoutingUnavailable'),
-        );
-      }
+    const unsubscribeFromNotices = routingLoader.subscribeToNotices(() => {
+      // BRouter currently reports no session notices; keep the hook in place so
+      // a future provider can surface degradation through the translated notice.
+      void translationRef.current;
     });
 
     return () => {

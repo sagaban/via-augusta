@@ -14,7 +14,7 @@ import { toWgs84 } from '../map/projection';
 import type { RouteElevationPoint } from '../metrics/routeMetrics';
 
 /** Language-neutral fallback used if a route name contains no valid filename characters. */
-const GPX_FILENAME_FALLBACK = 'via-helvetica-route';
+const GPX_FILENAME_FALLBACK = 'via-augusta-route';
 /** Decimal places for WGS 84 coordinates; seven digits provide sub-metre precision. */
 const GPX_COORDINATE_PRECISION = 7;
 /** Decimal places for elevation values supplied by the terrain profile service. */
@@ -62,7 +62,7 @@ interface GpxTrackPoint {
 
 /** Route geometry prepared for distance-based interpolation. */
 interface MeasuredRoute {
-  /** Retained export coordinates in EPSG:2056. */
+  /** Retained export coordinates in EPSG:3857. */
   coordinates: Coordinate[];
   /** WGS 84 coordinates used for geodesic segment lengths and GPX output. */
   lonLatCoordinates: Coordinate[];
@@ -430,7 +430,7 @@ function collectExportCoordinates(
 /**
  * Measures the displayed route once so coordinates can be interpolated at the
  * same regular distances used by the elevation profile.
- * @param coordinates - Ordered route vertices in EPSG:2056.
+ * @param coordinates - Ordered route vertices in EPSG:3857.
  * @returns Route coordinates and cumulative geodesic distances.
  */
 function measureRoute(coordinates: Coordinate[]): MeasuredRoute {
@@ -1009,7 +1009,7 @@ export function createRouteGpx(
  * geometry remain gaps after export. The cumulative elevation profile is split
  * back into segment-local samples before interpolation.
  *
- * @param segments - Independent itinerary lines in EPSG:2056.
+ * @param segments - Independent itinerary lines in EPSG:3857.
  * @param generatedAt - Timestamp written to GPX metadata.
  * @param routeName - Localized track name written to metadata and track nodes.
  * @param elevationPoints - Optional cumulative profile samples to embed as `<ele>` values.
@@ -1137,7 +1137,7 @@ export function downloadRouteGpx(
 /**
  * Downloads independent read-only itinerary segments as one named GPX track.
  *
- * @param segments - Independent itinerary lines in EPSG:2056.
+ * @param segments - Independent itinerary lines in EPSG:3857.
  * @param routeName - Localized track name written into the GPX document.
  * @param elevationPoints - Optional cumulative profile samples embedded in track points.
  * @throws {Error} If no segment contains enough geometry to export.

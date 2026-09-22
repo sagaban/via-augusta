@@ -5,16 +5,17 @@
  */
 import releaseHistorySource from './releaseHistory.json';
 import type { Language } from '../i18n/translations';
+import { BASE_PATH } from '../site';
 
 /** Local-storage key containing the most recently acknowledged release. */
-const LAST_SEEN_RELEASE_STORAGE_KEY = 'via-helvetica-last-seen-release';
+const LAST_SEEN_RELEASE_STORAGE_KEY = 'via-augusta-last-seen-release';
 /**
  * Existing preference written by pre-1.1.0 builds and used to detect returning
  * visitors during the first release-announcement migration.
  */
-const PREVIOUS_VISIT_STORAGE_KEY = 'via-helvetica-language';
+const PREVIOUS_VISIT_STORAGE_KEY = 'via-augusta-language';
 /** Temporary key confirming that release acknowledgement can be persisted. */
-const RELEASE_STORAGE_PROBE_KEY = 'via-helvetica-release-storage-probe';
+const RELEASE_STORAGE_PROBE_KEY = 'via-augusta-release-storage-probe';
 
 /** One release highlight shown in the dialog and on the static history page. */
 export interface ReleaseHistoryItem {
@@ -126,7 +127,7 @@ export function getCurrentReleaseDialogItems(
 
 /** Returns the localized static history path without leaving the current route. */
 export function releaseHistoryPath(language: Language): string {
-  return `/${language}/releases/`;
+  return `${BASE_PATH}${language}/releases/`;
 }
 
 /** Minimal storage contract required by release-announcement persistence. */

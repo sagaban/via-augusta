@@ -9,6 +9,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMapPositionMarker } from './mapPositionMarker';
 import type { MapRuntime } from './mapRuntime';
 import { fetchPointHeight } from './pointHeight';
+import { fromWgs84 } from './projection';
+
+/** Puerta del Sol and a nearby second point, in map coordinates. */
+const FIRST_POINT = fromWgs84([-3.7038, 40.4168]) as [number, number];
+const SECOND_POINT = fromWgs84([-3.69, 40.42]) as [number, number];
 import {
   useMapPositionInspection,
   type MapPositionInspectionController,
@@ -40,7 +45,7 @@ class FakeObservable {
 }
 
 function createRuntime(
-  initialCoordinate: [number, number] = [2_600_000, 1_200_000],
+  initialCoordinate: [number, number] = FIRST_POINT,
 ): {
   runtime: MapRuntime;
   viewport: HTMLDivElement;
@@ -101,7 +106,7 @@ describe('useMapPositionInspection', () => {
     document.body.appendChild(container);
     root = createRoot(container);
     hookHarness.controller = null;
-    vi.mocked(fetchPointHeight).mockResolvedValue(553.6);
+    vi.mocked(fetchPointHeight).mockResolvedValue(657);
   });
 
   afterEach(async () => {
@@ -141,23 +146,20 @@ describe('useMapPositionInspection', () => {
     expect(event.defaultPrevented).toBe(true);
     expect(onOpen).toHaveBeenCalledTimes(1);
     expect(fetchPointHeight).toHaveBeenCalledTimes(1);
-    expect(hookHarness.controller?.inspection?.coordinate).toEqual([
-      2_600_000,
-      1_200_000,
-    ]);
+    expect(hookHarness.controller?.inspection?.coordinate).toEqual(FIRST_POINT);
     expect(hookHarness.controller?.inspection?.wgs84Coordinate[0]).toBeCloseTo(
-      7.43863242,
+      -3.7038,
       6,
     );
     expect(hookHarness.controller?.inspection?.wgs84Coordinate[1]).toBeCloseTo(
-      46.95108277,
+      40.4168,
       6,
     );
     expect(hookHarness.controller?.inspection?.elevationStatus).toBe('ready');
-    expect(hookHarness.controller?.inspection?.elevationMeters).toBe(553.6);
+    expect(hookHarness.controller?.inspection?.elevationMeters).toBe(657);
     expect(
       runtime.mapPositionMarker.feature.getGeometry()?.getCoordinates(),
-    ).toEqual([2_600_000, 1_200_000]);
+    ).toEqual(FIRST_POINT);
 
     await act(async () => mapEvents.emit('singleclick'));
 
@@ -249,7 +251,7 @@ describe('useMapPositionInspection', () => {
       );
     });
 
-    setCoordinate([2_601_000, 1_201_000]);
+    setCoordinate(SECOND_POINT);
     await act(async () => {
       viewport.dispatchEvent(
         new MouseEvent('contextmenu', { cancelable: true, button: 2 }),
@@ -265,10 +267,7 @@ describe('useMapPositionInspection', () => {
       resolveSecond?.(612.4);
       await Promise.resolve();
     });
-    expect(hookHarness.controller?.inspection?.coordinate).toEqual([
-      2_601_000,
-      1_201_000,
-    ]);
+    expect(hookHarness.controller?.inspection?.coordinate).toEqual(SECOND_POINT);
     expect(hookHarness.controller?.inspection?.elevationMeters).toBe(612.4);
 
     await act(async () => {
@@ -276,10 +275,7 @@ describe('useMapPositionInspection', () => {
       await Promise.resolve();
     });
 
-    expect(hookHarness.controller?.inspection?.coordinate).toEqual([
-      2_601_000,
-      1_201_000,
-    ]);
+    expect(hookHarness.controller?.inspection?.coordinate).toEqual(SECOND_POINT);
     expect(hookHarness.controller?.inspection?.elevationMeters).toBe(612.4);
   });
 });

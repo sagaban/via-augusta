@@ -1,18 +1,19 @@
 /**
  * Business context: recognizes coordinates pasted into the compact map search
- * without contacting GeoAdmin. Via Helvetica accepts the two coordinate forms
- * commonly exchanged by Swiss hiking tools: decimal WGS 84 and Swiss LV95.
+ * without contacting the place provider. Via Augusta accepts the two coordinate
+ * forms commonly exchanged by Spanish hiking tools: decimal WGS 84 and
+ * ETRS89 / UTM, with or without an explicit zone (for example `30T 440291 4474254`).
  * It also recognizes strong markers in unfinished coordinate input so the UI
  * can avoid futile place-provider requests while the user is still typing.
  * Valid results are normalized to the existing WGS 84 search-result contract,
  * while map-extent validation happens locally before the result reaches React.
  */
-import { containsCoordinate } from 'ol/extent.js';
+import { isWgs84CoordinateInsideMapBounds } from '../map/config';
 import {
-  isWgs84CoordinateInsideMapBounds,
-  MAP_EXTENT,
-} from '../map/config';
-import { toWgs84 } from '../map/projection';
+  isSpanishUtmZone,
+  utmToWgs84,
+  type SpanishUtmZone,
+} from '../map/projection';
 import type {
   CoordinateSearchOrigin,
   LocationSearchResult,
@@ -31,35 +32,48 @@ const MAXIMUM_WGS84_LONGITUDE = 180;
 const LONGITUDE_FIRST_MAXIMUM_LONGITUDE = 20;
 /**
  * Minimum absolute latitude in decimal degrees used by the same fallback.
- * Lowering it broadens longitude-first detection beyond the Swiss context;
- * raising it rejects more valid coordinates from nearby European regions.
+ * Lowering it broadens longitude-first detection; raising it rejects more
+ * valid coordinates from the southern peninsula.
  */
 const LONGITUDE_FIRST_MINIMUM_LATITUDE = 35;
 /**
- * Broad LV95 easting range in metres used only to recognize the Swiss CRS.
- * The navigable map extent remains the stricter final acceptance boundary.
+ * Broad UTM easting range in metres. Zone 30 is often extended over Cataluña
+ * and Baleares, so values beyond the nominal 166–834 km band are accepted.
+ * The map bounds remain the stricter final acceptance boundary.
  */
-const LV95_EASTING_RANGE = [2_000_000, 3_000_000] as const;
-/** Broad LV95 northing range in metres used to distinguish axis order. */
-const LV95_NORTHING_RANGE = [900_000, 1_500_000] as const;
+const UTM_EASTING_RANGE = [100_000, 1_000_000] as const;
+/** Broad UTM northing range in metres covering Canarias through the Pyrenees. */
+const UTM_NORTHING_RANGE = [3_000_000, 4_950_000] as const;
+/**
+ * Northing below which a zone-less UTM pair is interpreted in zone 28. Only
+ * the Canary Islands lie that far south; everything else defaults to zone 30,
+ * the zone used for most peninsular maps.
+ */
+const CANARY_ISLANDS_MAX_NORTHING = 3_300_000;
 /** Maximum decimal places retained when displaying WGS 84 input. */
 const WGS84_DISPLAY_DECIMALS = 6;
-/** Maximum sub-metre decimal places retained when displaying LV95 input. */
-const LV95_DISPLAY_DECIMALS = 3;
+/** Maximum sub-metre decimal places retained when displaying UTM input. */
+const UTM_DISPLAY_DECIMALS = 1;
 
 /**
  * Characters accepted while a supported coordinate pair is still being typed.
- * Letters deliberately fall through to GeoAdmin so postal addresses and place
- * names containing numbers keep their normal search behaviour.
+ * Letters deliberately fall through to the place provider so place names
+ * containing numbers keep their normal search behaviour.
  */
 const COORDINATE_DRAFT_CHARACTERS =
   /^[0-9+\-.,; '\u2019\u02bc\u00a0\u202f]*$/;
 /**
- * Largest unsigned integer that can still plausibly be a Swiss postal code.
+ * Largest unsigned integer that can still plausibly be a Spanish postal code.
  * Larger standalone values are treated as unfinished projected coordinates and
  * kept away from the place provider until a complete pair can be parsed.
  */
-const MAXIMUM_POSTAL_CODE_VALUE = 9_999;
+const MAXIMUM_POSTAL_CODE_VALUE = 99_999;
+
+/**
+ * Explicit UTM zone prefix such as `30`, `30T`, `30S`, or `30N`, followed by
+ * the easting and northing. Band letters are accepted but only the zone is used.
+ */
+const UTM_WITH_ZONE_PATTERN = /^(\d{2})\s*[A-Za-z]?\s*[,;]?\s+(.+)$/;
 
 /** Result returned when the complete input is or is not a coordinate pair. */
 export type CoordinateSearchParseResult =
@@ -68,7 +82,7 @@ export type CoordinateSearchParseResult =
       kind: 'not-coordinate';
     }
   | {
-      /** The text is a valid coordinate pair outside the map's Swiss extent. */
+      /** The text is a valid coordinate pair outside the map's Spanish extent. */
       kind: 'outside-map';
     }
   | {
@@ -94,8 +108,8 @@ interface Wgs84Coordinate {
   longitude: number;
 }
 
-/** Resolved LV95 easting and northing in metres. */
-interface Lv95Coordinate {
+/** Resolved UTM easting and northing in metres. */
+interface UtmPair {
   /** Easting in metres. */
   easting: number;
   /** Northing in metres. */
@@ -115,7 +129,7 @@ function isValidLongitude(value: number): boolean {
 }
 
 /**
- * Parses one number token while accepting Swiss thousands apostrophes and,
+ * Parses one number token while accepting thousands separators and,
  * only for semicolon-separated input, a European decimal comma.
  * @param token - One side of the candidate coordinate pair.
  * @param allowDecimalComma - Whether a comma may represent the decimal mark.
@@ -175,8 +189,8 @@ function createPair(
 
 /**
  * Extracts exactly two numeric values from the supported separators. Strict
- * whole-string matching prevents postal-code searches such as "1204 Genève"
- * from being mistaken for coordinates.
+ * whole-string matching prevents searches such as "28013 Madrid" from being
+ * mistaken for coordinates.
  * @param searchText - Complete trimmed text from the search field.
  * @returns Two numbers, or null when the text contains anything else.
  */
@@ -203,23 +217,6 @@ function extractNumericPair(searchText: string): NumericPair | null {
     return createPair(whitespaceParts[0], whitespaceParts[1], false);
   }
 
-  // Six integer groups unambiguously represent two Swiss seven-digit values,
-  // for example "2 671 804 1 204 459" copied without a comma separator.
-  if (
-    whitespaceParts.length === 6 &&
-    whitespaceParts.every((part) => /^\d{1,3}$/.test(part)) &&
-    whitespaceParts[1].length === 3 &&
-    whitespaceParts[2].length === 3 &&
-    whitespaceParts[4].length === 3 &&
-    whitespaceParts[5].length === 3
-  ) {
-    return createPair(
-      whitespaceParts.slice(0, 3).join(''),
-      whitespaceParts.slice(3).join(''),
-      false,
-    );
-  }
-
   return null;
 }
 
@@ -231,7 +228,7 @@ function isWgs84InsideMap(coordinate: Wgs84Coordinate): boolean {
 }
 
 /**
- * Resolves the latitude/longitude order. A coordinate inside the Swiss map
+ * Resolves the latitude/longitude order. A coordinate inside the Spanish map
  * extent wins first; for outside coordinates, the conventional latitude-first
  * order is retained unless broad European bounds strongly indicate
  * longitude-first input.
@@ -274,44 +271,53 @@ function resolveWgs84Coordinate(pair: NumericPair): Wgs84Coordinate | null {
   return direct ?? reversed;
 }
 
-function isLv95InsideMap(coordinate: Lv95Coordinate): boolean {
-  return containsCoordinate(MAP_EXTENT, [
-    coordinate.easting,
-    coordinate.northing,
-  ]);
+/**
+ * Resolves UTM easting/northing order. Their non-overlapping numeric ranges
+ * make a reversed pair safely detectable without guessing.
+ * @param pair - Two finite values whose axis order is not yet known.
+ * @returns The resolved easting and northing, or null when neither order fits.
+ */
+function resolveUtmPair(pair: NumericPair): UtmPair | null {
+  if (
+    isWithin(pair.first, UTM_EASTING_RANGE) &&
+    isWithin(pair.second, UTM_NORTHING_RANGE)
+  ) {
+    return { easting: pair.first, northing: pair.second };
+  }
+
+  if (
+    isWithin(pair.second, UTM_EASTING_RANGE) &&
+    isWithin(pair.first, UTM_NORTHING_RANGE)
+  ) {
+    return { easting: pair.second, northing: pair.first };
+  }
+
+  return null;
+}
+
+/** Chooses the zone assumed for a UTM pair entered without one. */
+function defaultUtmZone(pair: UtmPair): SpanishUtmZone {
+  return pair.northing < CANARY_ISLANDS_MAX_NORTHING ? 28 : 30;
 }
 
 /**
- * Resolves official LV95 easting/northing order. Their non-overlapping Swiss
- * numeric ranges make a reversed pair safely detectable without guessing.
- * @param pair - Two finite values whose LV95 axis order is not yet known.
- * @returns The resolved easting and northing, or null when neither order fits
- * the broad LV95 recognition ranges.
+ * Splits an optional explicit zone prefix from the remaining pair text.
+ * @returns The zone and remaining text, or null when no valid prefix exists.
  */
-function resolveLv95Coordinate(pair: NumericPair): Lv95Coordinate | null {
-  const direct =
-    isWithin(pair.first, LV95_EASTING_RANGE) &&
-    isWithin(pair.second, LV95_NORTHING_RANGE)
-      ? { easting: pair.first, northing: pair.second }
-      : null;
-  const reversed =
-    isWithin(pair.second, LV95_EASTING_RANGE) &&
-    isWithin(pair.first, LV95_NORTHING_RANGE)
-      ? { easting: pair.second, northing: pair.first }
-      : null;
+function extractUtmZonePrefix(
+  searchText: string,
+): { zone: SpanishUtmZone; rest: string } | null {
+  const match = UTM_WITH_ZONE_PATTERN.exec(
+    searchText.trim().replace(/[\u00a0\u202f]/g, ' '),
+  );
 
-  if (!direct && !reversed) {
+  if (!match) {
     return null;
   }
 
-  const directInsideMap = direct ? isLv95InsideMap(direct) : false;
-  const reversedInsideMap = reversed ? isLv95InsideMap(reversed) : false;
+  const zone = Number(match[1]);
 
-  if (directInsideMap !== reversedInsideMap) {
-    return directInsideMap ? direct : reversed;
-  }
-
-  return direct ?? reversed;
+  return isSpanishUtmZone(zone) ? { zone, rest: match[2] } : null;
 }
 
 function formatDecimal(value: number, maximumDecimals: number): string {
@@ -321,17 +327,8 @@ function formatDecimal(value: number, maximumDecimals: number): string {
     .replace(/(\.\d*?)0+$/, '$1');
 }
 
-function formatLv95Value(value: number): string {
-  const decimalText = formatDecimal(value, LV95_DISPLAY_DECIMALS);
-  const [integerPart, fractionalPart] = decimalText.split('.');
-  const groupedInteger = integerPart.replace(
-    /\B(?=(\d{3})+(?!\d))/g,
-    "'",
-  );
-
-  return fractionalPart
-    ? `${groupedInteger}.${fractionalPart}`
-    : groupedInteger;
+function formatUtmValue(value: number): string {
+  return formatDecimal(value, UTM_DISPLAY_DECIMALS);
 }
 
 function createCoordinateResult(
@@ -349,44 +346,62 @@ function createCoordinateResult(
 }
 
 /**
- * Recognizes decimal WGS 84 or LV95 input without issuing a provider request.
- * Supported separators are comma, semicolon, or whitespace. Semicolons also
- * allow European decimal commas, and LV95 values may contain Swiss thousands
- * apostrophes or spaces.
+ * Builds a UTM search result after validating it against the map bounds.
+ * @returns A search outcome for the resolved UTM coordinate.
+ */
+function createUtmOutcome(
+  zone: SpanishUtmZone,
+  pair: UtmPair,
+): CoordinateSearchParseResult {
+  const [longitude, latitude] = utmToWgs84({ zone, ...pair });
+
+  if (!isWgs84CoordinateInsideMapBounds([longitude, latitude])) {
+    return { kind: 'outside-map' };
+  }
+
+  return {
+    kind: 'result',
+    result: createCoordinateResult(
+      'utm',
+      `${zone} ${formatUtmValue(pair.easting)} ${formatUtmValue(pair.northing)}`,
+      { latitude, longitude },
+    ),
+  };
+}
+
+/**
+ * Recognizes decimal WGS 84 or ETRS89 / UTM input without issuing a provider
+ * request. Supported separators are comma, semicolon, or whitespace.
+ * Semicolons also allow European decimal commas. A UTM pair may be prefixed by
+ * its zone (28–31, optional band letter); without it, zone 30 is assumed, or
+ * zone 28 for Canary Islands northings.
  * @param searchText - Complete user-entered search value.
  * @returns A local result, an outside-map outcome, or not-coordinate.
  */
 export function parseCoordinateSearch(
   searchText: string,
 ): CoordinateSearchParseResult {
+  const zonePrefix = extractUtmZonePrefix(searchText);
+
+  if (zonePrefix) {
+    const zonedPair = extractNumericPair(zonePrefix.rest);
+    const zonedUtmPair = zonedPair ? resolveUtmPair(zonedPair) : null;
+
+    if (zonedUtmPair) {
+      return createUtmOutcome(zonePrefix.zone, zonedUtmPair);
+    }
+  }
+
   const pair = extractNumericPair(searchText);
 
   if (!pair) {
     return { kind: 'not-coordinate' };
   }
 
-  const lv95Coordinate = resolveLv95Coordinate(pair);
+  const utmPair = resolveUtmPair(pair);
 
-  if (lv95Coordinate) {
-    if (!isLv95InsideMap(lv95Coordinate)) {
-      return { kind: 'outside-map' };
-    }
-
-    const [longitude, latitude] = toWgs84([
-      lv95Coordinate.easting,
-      lv95Coordinate.northing,
-    ]);
-
-    return {
-      kind: 'result',
-      result: createCoordinateResult(
-        'lv95',
-        `${formatLv95Value(lv95Coordinate.easting)}, ${formatLv95Value(
-          lv95Coordinate.northing,
-        )}`,
-        { latitude, longitude },
-      ),
-    };
+  if (utmPair) {
+    return createUtmOutcome(defaultUtmZone(utmPair), utmPair);
   }
 
   const wgs84Coordinate = resolveWgs84Coordinate(pair);
@@ -417,8 +432,8 @@ export function parseCoordinateSearch(
 
 /**
  * Detects an unfinished coordinate-like value before it becomes a complete
- * supported pair. Strong numeric markers suppress futile GeoAdmin requests,
- * while ordinary four-digit postal codes and text remain provider searches.
+ * supported pair. Strong numeric markers suppress futile provider requests,
+ * while ordinary five-digit postal codes and text remain provider searches.
  *
  * @param searchText - Current, possibly incomplete value from the search field.
  * @returns True when the input should remain local until coordinate parsing can
@@ -440,14 +455,14 @@ export function isCoordinateSearchDraft(searchText: string): boolean {
     return false;
   }
 
-  // Swiss grouping apostrophes and semicolons are coordinate-specific enough
-  // to avoid sending every intermediate mobile keystroke to SearchServer.
+  // Grouping apostrophes and semicolons are coordinate-specific enough to
+  // avoid sending every intermediate mobile keystroke to the place provider.
   if (/[;'\u2019\u02bc]/.test(normalizedText)) {
     return true;
   }
 
   // A decimal point or explicit sign strongly indicates a geographic number;
-  // plain unsigned four-digit input must remain available for postal codes.
+  // plain unsigned five-digit input must remain available for postal codes.
   if (/[.+-]/.test(normalizedText)) {
     return true;
   }
@@ -476,18 +491,14 @@ export function isCoordinateSearchDraft(searchText: string): boolean {
     return true;
   }
 
-  // Space-grouped Swiss coordinates often pass through partial states such as
-  // "2 671 804 1 20". Repeated three-digit groups are distinctive, whereas
-  // two independent four-digit values may still be ordinary place searches.
+  // A leading two-digit Spanish UTM zone followed by more numbers is a zoned
+  // UTM coordinate still being typed, for example "30 440291 44".
   const whitespaceTokens = normalizedText.split(/\s+/);
 
   return (
     whitespaceTokens.length >= 2 &&
-    /^\d{1,3}$/.test(whitespaceTokens[0]) &&
-    whitespaceTokens
-      .slice(1)
-      .every((token) => /^\d{1,3}$/.test(token)) &&
-    whitespaceTokens.some((token) => token.length === 3)
+    whitespaceTokens[0].length === 2 &&
+    isSpanishUtmZone(Number(whitespaceTokens[0]))
   );
 }
 

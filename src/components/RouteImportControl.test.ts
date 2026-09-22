@@ -15,7 +15,7 @@ describe('RouteImportControl', () => {
 
   beforeEach(() => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    window.localStorage.setItem('via-helvetica-language', 'fr');
+    window.localStorage.setItem('via-augusta-language', 'en');
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);

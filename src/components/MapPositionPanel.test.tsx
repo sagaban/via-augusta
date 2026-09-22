@@ -1,21 +1,23 @@
 /**
  * Business context: protects the compact desktop position panel so WGS 84 and
- * LV95 remain unambiguous, copy actions use exactly the displayed coordinates,
+ * UTM remain unambiguous, copy actions use exactly the displayed coordinates,
  * and point-height failure never hides the local coordinate values.
  */
 import { act, createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '../i18n/I18nContext';
+import { fromWgs84 } from '../map/projection';
 import type { MapPositionInspection } from '../map/useMapPositionInspection';
 import MapPositionPanel, {
-  formatLv95MapPosition,
+  formatUtmMapPosition,
   formatWgs84MapPosition,
 } from './MapPositionPanel';
 
+/** Puerta del Sol, Madrid. */
 const readyInspection: MapPositionInspection = {
-  coordinate: [2_671_362.4, 1_204_798.7],
-  wgs84Coordinate: [8.377, 46.99],
+  coordinate: fromWgs84([-3.7038, 40.4168]),
+  wgs84Coordinate: [-3.7038, 40.4168],
   elevationStatus: 'ready',
   elevationMeters: 731.4,
 };
@@ -27,7 +29,7 @@ describe('MapPositionPanel', () => {
 
   beforeEach(() => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    window.localStorage.setItem('via-helvetica-language', 'fr');
+    window.localStorage.setItem('via-augusta-language', 'es');
     clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -52,10 +54,12 @@ describe('MapPositionPanel', () => {
     vi.restoreAllMocks();
   });
 
-  it('formats WGS 84 and LV95 in the intended user-facing order', () => {
-    expect(formatWgs84MapPosition([8.377, 46.99])).toBe('46.99000, 8.37700');
-    expect(formatLv95MapPosition([2_671_362.4, 1_204_798.7])).toBe(
-      "2'671'362, 1'204'799",
+  it('formats WGS 84 and UTM in the intended user-facing order', () => {
+    expect(formatWgs84MapPosition([-3.7038, 40.4168])).toBe(
+      '40.41680, -3.70380',
+    );
+    expect(formatUtmMapPosition(readyInspection.coordinate)).toMatch(
+      /^30 4402\d\d 44742\d\d$/,
     );
   });
 
@@ -80,9 +84,11 @@ describe('MapPositionPanel', () => {
       );
     });
 
-    expect(container.textContent).toContain('Position sur la carte');
-    expect(container.textContent).toContain('46.99000, 8.37700');
-    expect(container.textContent).toContain("2'671'362, 1'204'799");
+    const utmText = formatUtmMapPosition(readyInspection.coordinate);
+
+    expect(container.textContent).toContain('Posición en el mapa');
+    expect(container.textContent).toContain('40.41680, -3.70380');
+    expect(container.textContent).toContain(utmText);
     expect(container.textContent).toContain('731 m');
 
     const copyButtons = container.querySelectorAll<HTMLButtonElement>(
@@ -93,8 +99,8 @@ describe('MapPositionPanel', () => {
     await act(async () => copyButtons[0].click());
     await act(async () => copyButtons[1].click());
 
-    expect(writeText).toHaveBeenNthCalledWith(1, '46.99000, 8.37700');
-    expect(writeText).toHaveBeenNthCalledWith(2, "2'671'362, 1'204'799");
+    expect(writeText).toHaveBeenNthCalledWith(1, '40.41680, -3.70380');
+    expect(writeText).toHaveBeenNthCalledWith(2, utmText);
 
     container.querySelector<HTMLButtonElement>(
       '.map-information-choice-close',
@@ -120,7 +126,7 @@ describe('MapPositionPanel', () => {
       );
     });
 
-    expect(container.textContent).toContain('46.99000, 8.37700');
-    expect(container.textContent).toContain('Altitude indisponible');
+    expect(container.textContent).toContain('40.41680, -3.70380');
+    expect(container.textContent).toContain('Altitud no disponible');
   });
 });

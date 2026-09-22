@@ -1,12 +1,11 @@
 /**
  * Business context: rebuilds only the editable route sections affected by a
  * waypoint move, insertion, deletion, or loop closure. It coordinates the
- * experimental swissTLM3D router with immutable route state while keeping
+ * BRouter hiking router with immutable route state while keeping
  * React state and OpenLayers rendering outside the routing workflow.
  */
 import type { Coordinate } from 'ol/coordinate.js';
-import type { DynamicRoutingNetworkLoader } from './dynamicRoutingNetwork';
-import type { RoutedNetworkPath } from './networkRouter';
+import type { RoutedNetworkPath, RoutingLoader } from './brouterRouting';
 import { assertNetworkRouteSectionDistance } from './routeSectionLimit';
 import {
   coordinateDistanceSquared,
@@ -18,7 +17,7 @@ import {
 } from '../map/routeState';
 
 /**
- * Squared distance in square LV95 metres below which a network endpoint is
+ * Squared distance in square map units below which a network endpoint is
  * considered continuous with the exact waypoint. Increasing it may hide small
  * visible gaps; lowering it adds more short straight access connectors.
  */
@@ -28,7 +27,7 @@ const ROUTE_CONNECTOR_DISTANCE_SQUARED = 0.01;
  * Creates a freely placed waypoint and, when possible, a direct section from
  * the previous route endpoint.
  * @param previousStep - Current final step, or `undefined` for the first point.
- * @param coordinate - Exact LV95 position selected by the user.
+ * @param coordinate - Exact map position selected by the user.
  * @returns A new immutable straight-mode route step.
  */
 export function createStraightRouteStep(
@@ -82,11 +81,11 @@ export function connectRoutedSegmentEndpoint(
 /**
  * Requests one network path only after the intended section passes the
  * product-level distance rule. Keeping this guard beside every routing call
- * prevents future editing workflows from bypassing the same pre-Worker check.
+ * prevents future editing workflows from bypassing the same pre-request check.
  *
- * @param startCoordinate - Intended section start in LV95.
- * @param endCoordinate - Intended section end in LV95.
- * @param routingLoader - Bounded dynamic swissTLM3D network loader.
+ * @param startCoordinate - Intended section start in the map projection.
+ * @param endCoordinate - Intended section end in the map projection.
+ * @param routingLoader - Session routing client.
  * @param signal - Cancellation signal owned by the current edit.
  * @returns Routed geometry, or `null` when normal coverage is insufficient.
  * @throws {RouteSectionTooLongError} Before invoking the Worker when the direct
@@ -95,7 +94,7 @@ export function connectRoutedSegmentEndpoint(
 export async function requestNetworkRouteSection(
   startCoordinate: Coordinate,
   endCoordinate: Coordinate,
-  routingLoader: DynamicRoutingNetworkLoader,
+  routingLoader: RoutingLoader,
   signal: AbortSignal,
 ): Promise<RoutedNetworkPath | null> {
   assertNetworkRouteSectionDistance(startCoordinate, endCoordinate);
@@ -104,9 +103,9 @@ export async function requestNetworkRouteSection(
 
 /**
  * Validates every intended section of one compound edit before its first
- * Worker-backed operation. This prevents a valid first half from loading data
+ * router-backed operation. This prevents a valid first half from loading data
  * before a later half reveals that the complete edit is ambiguous.
- * @param sections - Intended LV95 endpoint pairs in edit order.
+ * @param sections - Intended endpoint pairs in edit order.
  * @throws {RouteSectionTooLongError} When any pair exceeds the product limit.
  */
 function assertNetworkRouteSectionsDistance(
@@ -142,11 +141,11 @@ export function createStraightRouteClosure(
 /**
  * Resolves one section whose start and end waypoints must remain exact.
  * Network mode may still fall back to a straight section when no connected
- * swissTLM3D path exists; request and parsing errors continue to propagate.
- * @param startCoordinate - Exact section start in LV95.
- * @param endCoordinate - Exact section end in LV95.
+ * network path exists; request and parsing errors continue to propagate.
+ * @param startCoordinate - Exact section start in the map projection.
+ * @param endCoordinate - Exact section end in the map projection.
  * @param intendedMode - Current user snap choice.
- * @param routingLoader - Bounded dynamic swissTLM3D network loader.
+ * @param routingLoader - Session routing client.
  * @param signal - Cancellation signal owned by the current edit.
  * @returns Rebuilt section geometry and the mode actually used.
  * @throws {Error} Propagates routing request, parsing, or size-limit failures.
@@ -155,7 +154,7 @@ export async function rebuildFixedRouteSection(
   startCoordinate: Coordinate,
   endCoordinate: Coordinate,
   intendedMode: RouteMode,
-  routingLoader: DynamicRoutingNetworkLoader,
+  routingLoader: RoutingLoader,
   signal: AbortSignal,
 ): Promise<RouteClosure> {
   if (intendedMode === 'network') {
@@ -198,9 +197,9 @@ export async function rebuildFixedRouteSection(
  *
  * @param state - Route state captured when the drag started.
  * @param waypointIndex - Index of the waypoint being moved.
- * @param targetCoordinate - Released pointer coordinate in LV95.
+ * @param targetCoordinate - Released pointer coordinate in the map projection.
  * @param editMode - Current snap choice applied to affected sections.
- * @param routingLoader - Bounded dynamic swissTLM3D network loader.
+ * @param routingLoader - Session routing client.
  * @param signal - Cancellation signal owned by the edit.
  * @returns Updated immutable route state.
  * @throws {Error} Propagates routing request, parsing, or size-limit failures.
@@ -210,7 +209,7 @@ export async function rebuildRouteAfterWaypointMove(
   waypointIndex: number,
   targetCoordinate: Coordinate,
   editMode: RouteMode,
-  routingLoader: DynamicRoutingNetworkLoader,
+  routingLoader: RoutingLoader,
   signal: AbortSignal,
 ): Promise<RouteState> {
   const { steps, closure } = state;
@@ -369,9 +368,9 @@ export async function rebuildRouteAfterWaypointMove(
  * straight geometry.
  * @param state - Route state captured when the drag started.
  * @param stepIndex - Destination step, or `steps.length` for the closure.
- * @param targetCoordinate - Released pointer coordinate in LV95.
+ * @param targetCoordinate - Released pointer coordinate in the map projection.
  * @param editMode - Current snap choice applied to both new sections.
- * @param routingLoader - Bounded dynamic swissTLM3D network loader.
+ * @param routingLoader - Session routing client.
  * @param signal - Cancellation signal owned by the edit.
  * @returns Updated immutable route state.
  * @throws {Error} Propagates routing request, parsing, or size-limit failures.
@@ -381,7 +380,7 @@ export async function rebuildRouteAfterWaypointInsertion(
   stepIndex: number,
   targetCoordinate: Coordinate,
   editMode: RouteMode,
-  routingLoader: DynamicRoutingNetworkLoader,
+  routingLoader: RoutingLoader,
   signal: AbortSignal,
 ): Promise<RouteState> {
   const { steps, closure } = state;
@@ -558,7 +557,7 @@ function mergeImportedSections(
  * @param state - Route state captured when deletion started.
  * @param waypointIndex - Index of the waypoint to remove.
  * @param editMode - Current snap choice applied to replacement sections.
- * @param routingLoader - Bounded dynamic swissTLM3D network loader.
+ * @param routingLoader - Session routing client.
  * @param signal - Cancellation signal owned by the edit.
  * @returns Updated immutable route state.
  * @throws {Error} Propagates routing request, parsing, or size-limit failures.
@@ -567,7 +566,7 @@ export async function rebuildRouteAfterWaypointDeletion(
   state: RouteState,
   waypointIndex: number,
   editMode: RouteMode,
-  routingLoader: DynamicRoutingNetworkLoader,
+  routingLoader: RoutingLoader,
   signal: AbortSignal,
 ): Promise<RouteState> {
   const { steps, closure } = state;

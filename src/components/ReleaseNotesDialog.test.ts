@@ -16,8 +16,8 @@ describe('ReleaseNotesDialog', () => {
 
   beforeEach(() => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    window.localStorage.setItem('via-helvetica-language', 'fr');
-    window.history.replaceState({}, '', '/fr/');
+    window.localStorage.setItem('via-augusta-language', 'es');
+    window.history.replaceState({}, '', '/es/');
 
     originalShowModal = Object.getOwnPropertyDescriptor(
       HTMLDialogElement.prototype,
@@ -80,7 +80,7 @@ describe('ReleaseNotesDialog', () => {
     vi.restoreAllMocks();
   });
 
-  it('keeps a history-only patch release out of the compact dialog', async () => {
+  it('lists the first-release highlights in the compact dialog', async () => {
     const onClose = vi.fn();
 
     await act(async () => {
@@ -98,17 +98,15 @@ describe('ReleaseNotesDialog', () => {
 
     expect(
       container.querySelectorAll('.release-notes-list > li'),
-    ).toHaveLength(0);
-    expect(container.textContent).toContain('Nouveautés de Via Helvetica 1.7.2');
-    expect(container.textContent).not.toContain(
-      'Horaires des avis de tir plus lisibles :',
-    );
+    ).toHaveLength(4);
+    expect(container.textContent).toContain('Novedades de Via Augusta 0.1.0');
+    expect(container.textContent).toContain('Mapas oficiales del IGN:');
 
     const historyLink = container.querySelector<HTMLAnchorElement>(
       '.release-notes-dialog-footer a',
     );
 
-    expect(historyLink?.getAttribute('href')).toBe('/fr/releases/');
+    expect(historyLink?.getAttribute('href')).toBe('/es/releases/');
     expect(historyLink?.target).toBe('_blank');
   });
 });

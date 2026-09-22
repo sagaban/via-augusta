@@ -1,6 +1,6 @@
 /**
  * Business context: protects editable-route orchestration that cannot be
- * covered by pure geometry tests, including React Strict Mode Worker lifecycle
+ * covered by pure geometry tests, including React Strict Mode routing-client lifecycle
  * and synchronous rejection of ambiguous long sections before routing starts.
  */
 import { StrictMode, act, createElement } from 'react';
@@ -9,10 +9,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Coordinate } from 'ol/coordinate.js';
 import type { RouteState } from './routeState';
 import { useEditableRoute, type EditableRouteController } from './useEditableRoute';
-
-type RoutingNotice =
-  | 'hiking-enrichment-unavailable'
-  | 'precomputed-routing-unavailable';
 
 interface CapturedRouteInteractions {
   onAppendEndpoint: (
@@ -26,7 +22,6 @@ const loaderState = vi.hoisted(() => ({
     disposed: boolean;
     snapCalls: number;
     routeCalls: number;
-    emit: (notice: RoutingNotice) => void;
   }>,
 }));
 
@@ -38,13 +33,8 @@ const controllerState: { current: EditableRouteController | null } = {
   current: null,
 };
 
-vi.mock('../routing/dynamicRoutingNetwork', () => {
-  class RoutingAreaTooLargeError extends Error {}
-
-  class DynamicRoutingNetworkLoader {
-    private readonly listeners = new Set<
-      (notice: RoutingNotice) => void
-    >();
+vi.mock('../routing/brouterRouting', () => {
+  class BRouterRoutingLoader {
     disposed = false;
     snapCalls = 0;
     routeCalls = 0;
@@ -53,17 +43,8 @@ vi.mock('../routing/dynamicRoutingNetwork', () => {
       loaderState.instances.push(this);
     }
 
-    subscribeToNotices(
-      listener: (notice: RoutingNotice) => void,
-    ): () => void {
-      this.listeners.add(listener);
-      return () => this.listeners.delete(listener);
-    }
-
-    emit(notice: RoutingNotice): void {
-      for (const listener of this.listeners) {
-        listener(notice);
-      }
+    subscribeToNotices(): () => void {
+      return () => undefined;
     }
 
     snap(): Promise<null> {
@@ -78,14 +59,10 @@ vi.mock('../routing/dynamicRoutingNetwork', () => {
 
     dispose(): void {
       this.disposed = true;
-      this.listeners.clear();
     }
   }
 
-  return {
-    DynamicRoutingNetworkLoader,
-    RoutingAreaTooLargeError,
-  };
+  return { BRouterRoutingLoader };
 });
 
 vi.mock('./useRouteInteractions', () => ({
@@ -108,16 +85,8 @@ function Harness() {
   const controller = useEditableRoute({
     mapRuntimeRef: { current: null },
     mapTargetRef: { current: null },
-    locale: 'en-CH',
+    locale: 'en-GB',
     t: (key, parameters) => {
-      if (key === 'route.hikingEnrichmentUnavailable') {
-        return 'Roads-only routing warning';
-      }
-
-      if (key === 'route.precomputedRoutingUnavailable') {
-        return 'GeoAdmin routing fallback warning';
-      }
-
       if (key === 'route.sectionTooLong') {
         return `Section ${parameters?.distance} km / ${parameters?.maximum} km`;
       }
@@ -160,7 +129,7 @@ describe('useEditableRoute orchestration', () => {
     vi.restoreAllMocks();
   });
 
-  it('subscribes the replacement Worker created by React Strict Mode', async () => {
+  it('disposes the routing client discarded by React Strict Mode', async () => {
     await act(async () => {
       root?.render(createElement(StrictMode, null, createElement(Harness)));
     });
@@ -168,29 +137,8 @@ describe('useEditableRoute orchestration', () => {
     expect(loaderState.instances).toHaveLength(2);
     expect(loaderState.instances[0].disposed).toBe(true);
     expect(loaderState.instances[1].disposed).toBe(false);
-
-    await act(async () => {
-      loaderState.instances[1].emit('hiking-enrichment-unavailable');
-    });
-
-    expect(container.textContent).toBe('Roads-only routing warning|false');
+    expect(container.textContent).toBe('|false');
   });
-
-
-  it('shows the session fallback notice from the active Worker', async () => {
-    await act(async () => {
-      root?.render(createElement(Harness));
-    });
-
-    await act(async () => {
-      loaderState.instances[0].emit('precomputed-routing-unavailable');
-    });
-
-    expect(container.textContent).toBe(
-      'GeoAdmin routing fallback warning|false',
-    );
-  });
-
 
   it('seeds editable history from imported geometry without routing', async () => {
     await act(async () => {
@@ -224,7 +172,7 @@ describe('useEditableRoute orchestration', () => {
     expect(loaderState.instances[0].routeCalls).toBe(0);
   });
 
-  it('rejects an overlong appended section before pending state or Worker routing', async () => {
+  it('rejects an overlong appended section before pending state or routing', async () => {
     await act(async () => {
       root?.render(createElement(Harness));
     });
@@ -240,12 +188,12 @@ describe('useEditableRoute orchestration', () => {
     };
 
     await act(async () => {
-      interactionState.options?.onAppendEndpoint(expectedState, [16_000, 0]);
+      interactionState.options?.onAppendEndpoint(expectedState, [30_000, 0]);
     });
 
     expect(controllerState.current?.isRouteOperationPending).toBe(false);
     expect(loaderState.instances[0].routeCalls).toBe(0);
-    expect(container.textContent).toBe('Section 16 km / 15 km|false');
+    expect(container.textContent).toBe('Section 30 km / 20 km|false');
   });
 });
 

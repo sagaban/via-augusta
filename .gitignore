@@ -8,8 +8,6 @@ dist/
 .env
 .env.*
 !.env.example
-/routing-data.config.local.json
-/public-transport-data.config.local.json
 
 # Logs
 *.log
@@ -23,28 +21,15 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 
-# Generated localized HTML entries
-/fr/
-/de/
-/it/
+# Generated localized HTML entries (template: scripts/templates/app.html)
+/es/
 /en/
 /releases/
-
-# Generated local routing data and legacy compiler workspaces
-# National datasets belong outside the repository; these entries are safeguards.
-/.routing-work/
-/.routing-release/
-/public/routing-data/
-/.tmp-precomputed-binary-routing-compiler/
 
 # Local repository archives
 /*.zip
 
-# Maintainer-only routing publication notes
-/docs/ROUTING_DATA_PUBLICATION_RUNBOOK.local.md
-
-# Local Cloudflare Worker deployment configuration
-/workers/swisstopo-gpx-share/wrangler.toml
-
-# Generated local public-transport dataset used only for provider experiments.
-public/local-data/
+# Generated from the deployment URL by scripts/generate-localized-pages.mjs
+/public/robots.txt
+/public/sitemap.xml
+/index.html

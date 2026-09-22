@@ -1,12 +1,12 @@
 /**
  * Business context: enforces the product-level distance limit for one
- * network-routed section before the browser asks the swissTLM3D Worker to load
- * a corridor. Long point-to-point jumps do not express a hiker's intended
+ * network-routed section before the browser asks BRouter for a path. Long point-to-point jumps do not express a hiker's intended
  * valley, pass, or side of a mountain clearly enough, so the user must add an
  * intermediate waypoint instead of making the router guess a whole region.
  */
 import type { Coordinate } from 'ol/coordinate.js';
-import { coordinateDistanceSquared } from '../map/routeState';
+import { getDistance } from 'ol/sphere.js';
+import { toWgs84 } from '../map/projection';
 import { MAX_NETWORK_SECTION_DIRECT_DISTANCE_METERS } from './routingConstants';
 
 /**
@@ -14,14 +14,14 @@ import { MAX_NETWORK_SECTION_DIRECT_DISTANCE_METERS } from './routingConstants';
  * too long to represent a sufficiently precise route-planning instruction.
  */
 export class RouteSectionTooLongError extends Error {
-  /** Direct horizontal distance between the two intended LV95 endpoints. */
+  /** Direct horizontal distance between the two intended endpoints. */
   readonly distanceMeters: number;
   /** Product limit applied to one network-routed section. */
   readonly maximumDistanceMeters: number;
 
   /**
    * Creates an actionable route-section failure.
-   * @param distanceMeters - Direct endpoint distance in LV95 metres.
+   * @param distanceMeters - Direct endpoint distance in metres.
    * @param maximumDistanceMeters - Maximum accepted direct distance in metres.
    */
   constructor(
@@ -39,27 +39,25 @@ export class RouteSectionTooLongError extends Error {
 }
 
 /**
- * Calculates direct horizontal distance between two LV95 route endpoints.
- * @param startCoordinate - Intended section start in EPSG:2056.
- * @param endCoordinate - Intended section end in EPSG:2056.
- * @returns Euclidean direct distance in metres.
+ * Calculates direct horizontal distance between two route endpoints.
+ * @param startCoordinate - Intended section start in the map projection.
+ * @param endCoordinate - Intended section end in the map projection.
+ * @returns Geodesic direct distance in metres.
  */
 export function getRouteSectionDirectDistanceMeters(
   startCoordinate: Coordinate,
   endCoordinate: Coordinate,
 ): number {
-  return Math.sqrt(
-    coordinateDistanceSquared(startCoordinate, endCoordinate),
-  );
+  return getDistance(toWgs84(startCoordinate), toWgs84(endCoordinate));
 }
 
 /**
- * Rejects an ambiguous long network section before any Worker request.
+ * Rejects an ambiguous long network section before any BRouter request.
  * Straight-mode sections deliberately bypass this product rule because they do
  * not load swissTLM3D data and explicitly represent the user's own geometry.
  *
- * @param startCoordinate - Intended network section start in EPSG:2056.
- * @param endCoordinate - Intended network section end in EPSG:2056.
+ * @param startCoordinate - Intended network section start in the map projection.
+ * @param endCoordinate - Intended network section end in the map projection.
  * @throws {RouteSectionTooLongError} When the direct distance exceeds the
  * configured product limit.
  */

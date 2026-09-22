@@ -625,7 +625,6 @@ select {
   outline-offset: 2px;
 }
 
-
 .map-control-button:active {
   box-shadow: 0 1px 5px rgb(0 0 0 / 20%);
   transform: translateY(1px);
@@ -686,7 +685,6 @@ select {
 .map-control-button--menu-open:hover {
   background: #125ac2;
 }
-
 
 .map-control-button--route-toggle {
   position: relative;
@@ -764,295 +762,8 @@ select {
   border-color: rgb(185 55 55 / 55%);
 }
 
-.map-information-popup {
-  position: absolute;
-  z-index: 30;
-  top: 5rem;
-  left: 1rem;
-  width: min(23rem, calc(100vw - 2rem));
-  max-height: calc(100vh - 6rem);
-  overflow: hidden;
-  border: 1px solid rgb(32 47 60 / 22%);
-  border-radius: 10px;
-  color: #17212b;
-  background: rgb(255 255 255 / 98%);
-  box-shadow: 0 8px 28px rgb(0 0 0 / 22%);
-  backdrop-filter: blur(10px);
-}
-
-.map-information-popup-header {
-  display: flex;
-  min-height: 3rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.6rem 0.75rem 0.6rem 1rem;
-  border-bottom: 1px solid rgb(32 47 60 / 14%);
-  font-size: 1rem;
-}
-
-.map-information-popup-close {
-  display: grid;
-  width: 2.15rem;
-  height: 2.15rem;
-  flex: 0 0 auto;
-  padding: 0;
-  place-items: center;
-  border: 0;
-  border-radius: 6px;
-  color: #b71919;
-  background: transparent;
-  cursor: pointer;
-  font-size: 1.8rem;
-  font-weight: 300;
-  line-height: 1;
-}
-
-.map-information-popup-close:hover {
-  background: rgb(183 25 25 / 9%);
-}
-
-.map-information-popup-close:focus-visible {
-  outline: 3px solid rgb(23 105 224 / 40%);
-  outline-offset: 1px;
-}
-
-.map-information-popup-body {
-  max-height: calc(100vh - 9rem);
-  padding: 1rem;
-  overflow-y: auto;
-  font-size: 0.92rem;
-  line-height: 1.45;
-}
-
-.map-information-popup-body > p {
-  margin: 0;
-  color: #5c6872;
-}
-
-.public-transport-stop-popup {
-  width: fit-content;
-  min-width: 23rem;
-  max-width: min(29rem, calc(100vw - 2rem));
-}
-
-.public-transport-stop-popup .map-information-popup-header {
-  align-items: flex-start;
-  /* Timetable rows, not a long stop name, determine intrinsic popup width. */
-  contain: inline-size;
-}
-
-.public-transport-stop-heading {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 0.4rem;
-  line-height: 1.35;
-}
-
-.public-transport-stop-heading strong {
-  overflow-wrap: anywhere;
-  font-weight: 700;
-}
-
-.public-transport-stop-modes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-.public-transport-stop-modes img {
-  width: 1.25rem;
-  height: 1.25rem;
-  flex: 0 0 auto;
-}
-
-.map-information-choice-summary {
-  position: absolute;
-  z-index: 30;
-  bottom: 1rem;
-  left: 50%;
-  display: flex;
-  width: min(36rem, calc(100vw - 2rem));
-  max-width: calc(100vw - 2rem);
-  transform: translateX(-50%);
-}
-
-.map-information-choice-panel {
-  width: 100%;
-  overflow: hidden;
-  border: 1px solid rgb(32 47 60 / 22%);
-  border-radius: 10px;
-  color: #17212b;
-  background: rgb(255 255 255 / 97%);
-  box-shadow: 0 4px 18px rgb(0 0 0 / 22%);
-  backdrop-filter: blur(8px);
-}
-
-.map-information-choice-panel-header {
-  display: flex;
-  min-height: 3.5rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.7rem 0.75rem 0.7rem 1rem;
-}
-
-.map-information-choice-heading {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 0.4rem;
-  line-height: 1.35;
-}
-
-.map-information-choice-heading strong {
-  overflow-wrap: anywhere;
-  font-weight: 700;
-}
-
-.map-information-choice-close {
-  display: grid;
-  width: 2.4rem;
-  height: 2.4rem;
-  flex: 0 0 auto;
-  padding: 0;
-  place-items: center;
-  border: 0;
-  border-radius: 7px;
-  color: #b71919;
-  background: transparent;
-  cursor: pointer;
-  font-size: 1.9rem;
-  font-weight: 300;
-  line-height: 1;
-}
-
-.map-information-choice-close:hover {
-  background: rgb(183 25 25 / 9%);
-}
-
-.map-information-choice-close:focus-visible,
-.map-information-choice:focus-visible {
-  outline: 3px solid rgb(23 105 224 / 40%);
-  outline-offset: 1px;
-}
-
-.map-information-choice-content {
-  padding: 0 1rem 1rem;
-  border-top: 1px solid rgb(32 47 60 / 13%);
-}
-
-.map-information-choice-hint {
-  margin: 0.75rem 0;
-  color: #52606b;
-  font-size: 0.88rem;
-  font-weight: 500;
-}
-
-.map-information-choices {
-  display: grid;
-  max-height: min(15rem, calc(100vh - 13rem));
-  gap: 0.45rem;
-  overflow-y: auto;
-}
-
-.map-information-choice {
-  display: flex;
-  width: 100%;
-  min-height: 2.8rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-  padding: 0.7rem 0.8rem;
-  border: 1px solid rgb(32 47 60 / 16%);
-  border-radius: 8px;
-  color: #17212b;
-  background: rgb(23 105 224 / 6%);
-  font: inherit;
-  font-weight: 650;
-  line-height: 1.3;
-  text-align: left;
-  cursor: pointer;
-}
-
-.map-information-choice:hover {
-  background: rgb(23 105 224 / 12%);
-}
-
 /* A map click can legitimately match several information layers. Keep the
    temporary chooser grouped by product meaning rather than by provider call. */
-.map-information-choice-group {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.map-information-choice-group + .map-information-choice-group {
-  margin-top: 0.8rem;
-}
-
-.map-information-choice-group h2 {
-  margin: 0;
-  color: #52606b;
-  font-size: 0.78rem;
-  font-weight: 750;
-  letter-spacing: 0.02em;
-}
-
-.map-information-choice-icon {
-  display: grid;
-  width: 2rem;
-  height: 2rem;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 7px;
-}
-
-.map-information-choice-icon img {
-  width: 1.35rem;
-  height: 1.35rem;
-}
-
-.map-information-choice-icon--closure,
-.map-information-choice-icon--danger,
-.map-information-choice-icon--transport {
-  background: transparent;
-}
-
-.map-information-choice-icon--closure img,
-.map-information-choice-icon--danger img,
-.map-information-choice-icon--transport img {
-  width: 1.55rem;
-  height: 1.55rem;
-}
-
-.map-information-choice-icon--hiking {
-  color: #287a3b;
-  background: rgb(40 122 59 / 10%);
-}
-
-.map-information-choice-icon--hiking img {
-  width: 1.55rem;
-  height: 1.55rem;
-}
-
-.map-information-choice-label {
-  display: flex;
-  min-width: 0;
-  flex: 1 1 auto;
-  flex-direction: column;
-  gap: 0.12rem;
-}
-
-.map-information-choice strong {
-  overflow-wrap: anywhere;
-}
-
-.map-information-choice-subtitle {
-  color: #52606b;
-  font-size: 0.82rem;
-  font-weight: 500;
-}
 
 /* Desktop right-click inspection uses the same temporary lower-map language as
    ambiguity choices, but remains narrower because it contains only one point. */
@@ -1152,369 +863,13 @@ select {
   font-variant-numeric: tabular-nums;
 }
 
-.public-transport-departures {
-  margin-bottom: 1rem;
-}
-
-.public-transport-departures h2 {
-  margin: 0 0 0.65rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-.public-transport-departures-status {
-  margin: 0;
-  color: #5c6872;
-}
-
-.public-transport-departure-groups {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.public-transport-departure-group h3 {
-  margin: 0;
-  color: #17212b;
-  font-size: 0.88rem;
-  font-weight: 700;
-  line-height: 1.35;
-}
-
-/* Shared tracks size the line badge from the widest visible label across all rows. */
-.public-transport-departure-list {
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr) 3.15rem;
-  column-gap: 0.35rem;
-  margin: 0.25rem 0 0;
-  padding: 0 0.75rem 0 0;
-  list-style: none;
-}
-
-.public-transport-departure-list--with-delay {
-  grid-template-columns: max-content minmax(0, 1fr) 3.15rem 3.5rem;
-}
-
-.public-transport-departure-list li {
-  display: grid;
-  min-height: 2.65rem;
-  grid-column: 1 / -1;
-  grid-template-columns: subgrid;
-  align-items: center;
-  border-bottom: 1px solid rgb(32 47 60 / 11%);
-}
-
-.public-transport-departure-list li:first-child {
-  border-top: 1px solid rgb(32 47 60 / 11%);
-}
-
-.public-transport-departure-line {
-  box-sizing: border-box;
-  min-width: 3.5rem;
-  max-width: 5.5rem;
-  padding: 0.2rem 0.4rem;
-  border-radius: 5px;
-  color: #17212b;
-  background: rgb(23 105 224 / 10%);
-  font-size: 0.84rem;
-  font-weight: 700;
-  overflow: hidden;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.public-transport-departure-destination {
-  min-width: 0;
-  margin-left: 0.15rem;
-  overflow: hidden;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.public-transport-departure-time {
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.public-transport-departure-time--delayed {
-  color: #ff0000;
-}
-
-.public-transport-departure-delay {
-  color: #ff0000;
-  font-size: 0.8rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.public-transport-stop-links {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  /* Timetable content, not the fixed action labels, determines popup width. */
-  contain: inline-size;
-}
-
-.public-transport-stop-links a {
-  display: flex;
-  min-height: 2.65rem;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid rgb(32 47 60 / 16%);
-  border-radius: 8px;
-  color: #1769e0;
-  background: rgb(23 105 224 / 6%);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.public-transport-stop-links a:hover {
-  background: rgb(23 105 224 / 11%);
-}
-
-.public-transport-stop-links a:focus-visible {
-  outline: 3px solid rgb(23 105 224 / 40%);
-  outline-offset: 2px;
-}
-
-.public-transport-stop-links svg {
-  width: 1.2rem;
-  height: 1.2rem;
-  flex: 0 0 auto;
-  fill: none;
-  stroke: currentcolor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2;
-}
-
-.map-information-popup-error {
-  color: #a33636 !important;
-}
-
-.map-information-popup-content .htmlpopup-header {
-  margin-bottom: 0.85rem;
-  font-size: 1.05rem;
-  font-weight: 700;
-  line-height: 1.35;
-}
-
-.map-information-popup-content table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.map-information-popup-content td,
-.map-information-popup-content th {
-  padding: 0.45rem 0;
-  vertical-align: top;
-  border-bottom: 1px solid rgb(32 47 60 / 10%);
-  text-align: left;
-}
-
-.map-information-popup-content .cell-left,
-.map-information-popup-content th {
-  width: 38%;
-  padding-right: 0.8rem;
-  color: #3f4c56;
-  font-weight: 650;
-}
-
-.map-information-popup-content p:first-child,
-.map-information-popup-content div:first-child {
-  margin-top: 0;
-}
-
-.map-information-popup-content p:last-child,
-.map-information-popup-content div:last-child {
-  margin-bottom: 0;
-}
-
-.map-information-popup-content a {
-  color: #1769e0;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 2px;
-}
-
-/* GeoAdmin can split shooting dates, times, and PDF links across adjacent
-   inline/table nodes with no reliable visible whitespace after sanitization.
-   Project-owned spacing keeps the official content readable without changing
-   the source values, while the complete time range may wrap as one unit. */
-.map-information-popup-content .shooting-notice-date {
-  margin-inline-start: 0.3em;
-}
-
-.map-information-popup-content .shooting-time-range {
-  display: inline-block;
-  margin-inline-start: 0.3em;
-  white-space: nowrap;
-}
-
-.map-information-popup-content .shooting-notice-pdf-link {
-  display: inline-block;
-  margin-inline-start: 0.65rem;
-  white-space: nowrap;
-}
-
-.map-information-popup-content img {
-  max-width: 100%;
-  height: auto;
-}
-
-/* The selected public route occupies the same lower map region as the
-   itinerary summary. Its optional profile expands upward so the compact panel
-   remains anchored and no second bottom overlay competes for map space. */
-.switzerland-mobility-hiking-summary {
-  position: absolute;
-  z-index: 25;
-  bottom: 1rem;
-  left: 50%;
-  display: flex;
-  width: min(50rem, calc(100vw - 2rem));
-  max-width: calc(100vw - 2rem);
-  flex-direction: column;
-  gap: 0.45rem;
-  transform: translateX(-50%);
-}
-
-.switzerland-mobility-hiking-panel {
-  width: 100%;
-  overflow: hidden;
-  border: 1px solid rgb(32 47 60 / 22%);
-  border-radius: 10px;
-  color: #17212b;
-  background: rgb(255 255 255 / 97%);
-  box-shadow: 0 4px 18px rgb(0 0 0 / 22%);
-  backdrop-filter: blur(8px);
-}
-
-
-.switzerland-mobility-hiking-panel-header {
-  display: flex;
-  min-height: 3.5rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.7rem 0.75rem 0.7rem 1rem;
-}
-
-.switzerland-mobility-hiking-panel-heading {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 0.18rem;
-  line-height: 1.3;
-}
-
-.switzerland-mobility-hiking-panel-heading strong,
-.switzerland-mobility-hiking-panel-heading span {
-  overflow-wrap: anywhere;
-}
-
-.switzerland-mobility-hiking-panel-heading strong {
-  font-size: 1rem;
-}
-
-.switzerland-mobility-hiking-panel-heading span {
-  color: #52606b;
-  font-size: 0.9rem;
-}
-
-.switzerland-mobility-hiking-panel-actions {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 0.15rem;
-}
-
-.switzerland-mobility-hiking-panel-close {
-  display: grid;
-  width: 2.4rem;
-  height: 2.4rem;
-  flex: 0 0 auto;
-  padding: 0;
-  place-items: center;
-  border: 0;
-  border-radius: 7px;
-  color: #b71919;
-  background: transparent;
-  cursor: pointer;
-  font-size: 1.9rem;
-  font-weight: 300;
-  line-height: 1;
-}
-
-.switzerland-mobility-hiking-panel-close:hover {
-  background: rgb(183 25 25 / 9%);
-}
-
-.switzerland-mobility-hiking-panel-close:focus-visible {
-  outline: 3px solid rgb(23 105 224 / 40%);
-  outline-offset: 1px;
-}
-
-.switzerland-mobility-hiking-panel-status {
-  margin: 0;
-  padding: 0 1rem 0.9rem;
-  color: #52606b;
-  font-size: 0.9rem;
-}
-
-.switzerland-mobility-hiking-panel-status--error,
-.switzerland-mobility-hiking-elevation-error {
-  color: #a33636;
-}
-
-.switzerland-mobility-hiking-metrics {
-  display: grid;
-  min-height: 3.2rem;
-  grid-template-columns: minmax(0, 1fr) 3.5rem;
-  border-top: 1px solid rgb(32 47 60 / 13%);
-  font-size: 0.96rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.switzerland-mobility-hiking-metric-values {
-  display: grid;
-  min-width: 0;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-/* Public-route figures use the same four balanced columns as editable and
-   imported itineraries so switching information sources does not shift the
-   visual hierarchy of the bottom bar. */
-.switzerland-mobility-hiking-metric-values .route-statistics-item {
-  padding-block: 0.75rem;
-}
-
 /* The profile action is part of the metrics bar, but keeps the same icon and
    active-state language as editable and imported itineraries. */
-.switzerland-mobility-hiking-profile-toggle {
-  width: 100%;
-  min-height: 3.2rem;
-}
-
-.switzerland-mobility-hiking-elevation-error {
-  grid-column: 1 / -1;
-  padding: 0.45rem 0.75rem;
-  border-top: 1px solid rgb(32 47 60 / 10%);
-  font-size: 0.82rem;
-  font-weight: 600;
-  text-align: center;
-}
 
 /* Position inspection temporarily owns the lower map area, but the itinerary
    summaries stay mounted so local UI state such as an expanded elevation
    profile is restored unchanged when the inspection closes. */
-.app--map-position-inspection-open .route-summary,
-.app--map-position-inspection-open .switzerland-mobility-hiking-summary {
+.app--map-position-inspection-open .route-summary {
   display: none;
 }
 
@@ -1551,7 +906,6 @@ select {
   height: 1.6rem;
   display: block;
 }
-
 
 .route-statistics {
   display: grid;
@@ -2116,11 +1470,6 @@ select {
   margin-top: 0.45rem;
 }
 
-.route-export-dialog-swisstopo-option {
-  display: grid;
-  gap: 0.45rem;
-}
-
 .route-export-dialog-button {
   display: inline-flex;
   width: 100%;
@@ -2156,56 +1505,6 @@ select {
   cursor: not-allowed;
 }
 
-.route-export-dialog-form .route-export-dialog-storage-note {
-  display: flex;
-  gap: 0.45rem;
-  align-items: flex-start;
-  padding: 0 0.15rem;
-  color: #475569;
-  font-size: 0.88rem;
-  line-height: 1.45;
-}
-
-.route-export-dialog-share {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 12rem;
-  gap: 1rem;
-  align-items: center;
-  margin-top: 0.2rem;
-  padding: 0.9rem;
-  border: 1px solid rgb(32 47 60 / 18%);
-  border-radius: 10px;
-  background: #f5f8fb;
-}
-
-.route-export-dialog-share-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  min-width: 0;
-  color: #33414c;
-  font-size: 0.88rem;
-  line-height: 1.45;
-}
-
-.route-export-dialog-share-copy strong {
-  color: #17212b;
-  font-size: 0.95rem;
-}
-
-.route-export-dialog-qr {
-  display: block;
-  width: 12rem;
-  height: 12rem;
-  border: 1px solid rgb(32 47 60 / 18%);
-  background: #ffffff;
-}
-
-.route-export-dialog-form .route-export-dialog-error {
-  color: #b42318;
-  font-weight: 600;
-}
-
 @media (max-width: 36rem) {
   .route-export-dialog {
     width: min(100% - 1rem, 31rem);
@@ -2215,15 +1514,9 @@ select {
     padding: 1rem;
   }
 
-  .route-export-dialog-share {
-    grid-template-columns: 1fr;
-    justify-items: center;
-  }
+  
 
-  .route-export-dialog-share-copy {
-    align-items: center;
-    text-align: center;
-  }
+  
 }
 
 .route-message {
@@ -2400,11 +1693,8 @@ select {
      so a second empty tap restores the exact controls and information that were
      present before the user inspected or panned the map. */
   .app--map-ui-hidden .map-controls,
-  .app--map-ui-hidden .map-information-popup,
-  .app--map-ui-hidden .map-information-choice-summary,
   .app--map-ui-hidden .map-position-summary,
-  .app--map-ui-hidden .route-summary,
-  .app--map-ui-hidden .switzerland-mobility-hiking-summary {
+  .app--map-ui-hidden .route-summary {
     visibility: hidden;
     opacity: 0;
     pointer-events: none;
@@ -2639,53 +1929,17 @@ select {
      a fixed half-height sheet keeps the selected map context visible and delegates
      any extra content to the browser's native scrolling instead of custom drag
      gestures. Desktop popups keep their existing floating layout. */
-  .map-information-popup {
-    position: fixed;
-    z-index: 32;
-    top: auto;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    display: flex;
-    width: 100vw;
-    height: 50vh;
-    height: 50dvh;
-    max-height: none;
-    flex-direction: column;
-    border-right: 0;
-    border-bottom: 0;
-    border-left: 0;
-    border-radius: 18px 18px 0 0;
-    box-shadow: 0 -8px 28px rgb(0 0 0 / 22%);
-    overscroll-behavior: contain;
-  }
+  
 
-  .public-transport-stop-popup {
-    min-width: 0;
-    max-width: none;
-  }
+  
 
-  .map-information-popup-header {
-    flex: 0 0 auto;
-  }
+  
 
-  .map-information-popup-body {
-    min-height: 0;
-    max-height: none;
-    flex: 1 1 auto;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-  }
+  
 
   /* Keep the close glyph compact while giving phone users the same 44 px
      touch target used by the other primary mobile controls. */
-  .map-information-popup-close,
-  .map-information-choice-close,
-  .switzerland-mobility-hiking-panel-close {
-    width: 2.75rem;
-    height: 2.75rem;
-  }
+  
 
   .map-control-button,
   .language-selector {
@@ -2737,105 +1991,35 @@ select {
 
   /* Ambiguity choices use one transient full-width bottom sheet on phones;
      detailed information still moves to its normal feature-specific surface. */
-  .map-information-choice-summary {
-    z-index: 30;
-    bottom: 0;
-    left: 0;
-    width: 100vw;
-    max-width: 100vw;
-    height: auto;
-    max-height: 50vh;
-    max-height: 50dvh;
-    transform: none;
-  }
+  
 
-  .map-information-choice-panel {
-    display: flex;
-    width: 100%;
-    max-height: 50vh;
-    max-height: 50dvh;
-    min-height: 0;
-    flex-direction: column;
-    border-right: 0;
-    border-bottom: 0;
-    border-left: 0;
-    border-radius: 18px 18px 0 0;
-  }
+  
 
-  .map-information-choice-panel-header {
-    min-height: 3.2rem;
-    padding-left: 0.8rem;
-  }
+  
 
-  .map-information-choice-content {
-    display: flex;
-    min-height: 0;
-    flex: 1 1 auto;
-    flex-direction: column;
-    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
-  }
+  
 
-  .map-information-choices {
-    min-height: 0;
-    max-height: none;
-    flex: 1 1 auto;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-  }
+  
 
-
-  .switzerland-mobility-hiking-summary {
-    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
-    left: 0.75rem;
-    width: calc(100vw - 5.25rem);
-    max-width: calc(100vw - 5.25rem);
-    transform: none;
-  }
+  
 
   /* Once a public route is the current itinerary, its metrics and optional
      profile use the same full-width mobile footprint as editable/imported
      itineraries. Transient loading and error states can stay tied to their map
      click; ambiguity choices use the separate common bottom sheet above. */
-  .switzerland-mobility-hiking-summary--selected {
-    z-index: 30;
-    bottom: env(safe-area-inset-bottom, 0px);
-    left: 0;
-    width: 100vw;
-    max-width: 100vw;
-  }
+  
 
+  
 
-  .switzerland-mobility-hiking-panel-header {
-    min-height: 3.2rem;
-    padding-left: 0.8rem;
-  }
+  
 
-  .switzerland-mobility-hiking-metrics {
-    min-height: 2.85rem;
-    grid-template-columns: minmax(0, 1fr) 2.85rem;
-    font-size: clamp(0.78rem, 3.4vw, 0.92rem);
-  }
+  
 
-  .switzerland-mobility-hiking-metric-values {
-    grid-template-columns:
-      minmax(3.4rem, 1fr)
-      minmax(3.2rem, 0.9fr)
-      minmax(3.2rem, 0.9fr)
-      minmax(4.2rem, 1.2fr);
-  }
+  
 
-  .switzerland-mobility-hiking-metric-values .route-statistics-item {
-    padding-block: 0.4rem;
-  }
+  
 
-  .switzerland-mobility-hiking-profile-toggle {
-    min-height: 2.85rem;
-  }
-
-  .switzerland-mobility-hiking-elevation-error {
-    width: 100%;
-  }
+  
 
   /* On phones the statistics strip uses the complete viewport width. The
      contextual edit action moves above it instead of permanently reserving a
@@ -2853,8 +2037,7 @@ select {
      though rounded display corners can overlap the full-width profile action.
      Keep normal mobile layout flush to the usable viewport, but guarantee a
      small clearance when Via Helvetica itself owns fullscreen. */
-  .app:fullscreen .route-summary,
-  .app:fullscreen .switzerland-mobility-hiking-summary--selected {
+  .app:fullscreen .route-summary {
     bottom: max(env(safe-area-inset-bottom, 0px), 1.5rem);
   }
 
@@ -2964,7 +2147,6 @@ select {
     top: 8rem;
   }
 }
-
 
 @media (max-width: 430px) {
   .route-elevation-profile {

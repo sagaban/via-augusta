@@ -43,7 +43,7 @@ type SearchStatus =
   | 'error'
   | 'coordinate-outside';
 
-/** Minimum characters required before GeoAdmin is queried. */
+/** Minimum characters required before the place provider is queried. */
 const MINIMUM_QUERY_LENGTH = 2;
 /** Debounce delay in milliseconds to avoid a request for every keystroke. */
 const SEARCH_DELAY_MS = 300;
@@ -127,7 +127,7 @@ export default function LocationSearch({
 
     if (coordinateSearch.kind === 'result') {
       // Coordinate parsing is deliberately synchronous and local: a pasted
-      // coordinate should never wait for the debounce or contact GeoAdmin.
+      // coordinate should never wait for the debounce or contact the place provider.
       setResults([coordinateSearch.result]);
       setStatus('ready');
       setIsOpen(true);

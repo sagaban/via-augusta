@@ -33,10 +33,12 @@ function createStorage() {
 describe('release history', () => {
   it('provides the same current release structure in every language', () => {
     const expectedItemIds = [
-      'clearerShootingNoticeTimes',
-      'localizedDataSourceCredits',
+      'ignMaps',
+      'trailRouting',
+      'mideTime',
+      'utmCoordinates',
     ];
-    const expectedDialogItemIds: string[] = [];
+    const expectedDialogItemIds = expectedItemIds;
 
     for (const language of SUPPORTED_LANGUAGES) {
       const release = getCurrentRelease(language);
@@ -51,9 +53,9 @@ describe('release history', () => {
   });
 
 
-  it('keeps a history-only patch release out of the one-time announcement', () => {
+  it('announces every first-release highlight in the one-time dialog', () => {
     for (const language of SUPPORTED_LANGUAGES) {
-      expect(getCurrentReleaseDialogItems(language)).toEqual([]);
+      expect(getCurrentReleaseDialogItems(language)).toHaveLength(4);
     }
   });
 
@@ -61,13 +63,13 @@ describe('release history', () => {
     const storage = createStorage();
 
     expect(shouldShowCurrentRelease(storage)).toBe(false);
-    expect(storage.getItem('via-helvetica-last-seen-release'))
+    expect(storage.getItem('via-augusta-last-seen-release'))
       .toBe(CURRENT_RELEASE_VERSION);
   });
 
   it('shows the current release once to a returning visitor without an acknowledgement', () => {
     const storage = createStorage();
-    storage.setItem('via-helvetica-language', 'fr');
+    storage.setItem('via-augusta-language', 'es');
 
     expect(shouldShowCurrentRelease(storage)).toBe(true);
 
@@ -78,14 +80,14 @@ describe('release history', () => {
 
   it('shows the dialog again when the stored version is older', () => {
     const storage = createStorage();
-    storage.setItem('via-helvetica-last-seen-release', '1.1.0');
+    storage.setItem('via-augusta-last-seen-release', '0.0.9');
 
     expect(shouldShowCurrentRelease(storage)).toBe(true);
   });
 
   it('fails silently when release acknowledgement cannot be persisted', () => {
     const storage = createStorage();
-    storage.setItem('via-helvetica-last-seen-release', '1.0.0');
+    storage.setItem('via-augusta-last-seen-release', '0.0.1');
     const unavailableStorage = {
       getItem: storage.getItem,
       removeItem: storage.removeItem,

@@ -4,6 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { MAX_NETWORK_SECTION_DIRECT_DISTANCE_METERS } from '../routing/routingConstants';
+import { fromWgs84 } from './projection';
 import { collectRouteCoordinates } from './routeState';
 import {
   createEditableRouteFromImportedGeometry,
@@ -71,7 +72,9 @@ describe('createEditableRouteFromImportedGeometry', () => {
   });
 
   it('treats the preferred section count as soft when editability needs more anchors', () => {
-    const source = Array.from({ length: 4_501 }, (_value, index) => [index * 1_000, 0]);
+    // 6,000 km at a 500-section preference would mean 12 km sections, above the
+    // 10 km editability cap, so the converter must add more anchors.
+    const source = Array.from({ length: 6_001 }, (_value, index) => [index * 1_000, 0]);
     const state = createEditableRouteFromImportedGeometry(source);
 
     expect(state.steps.length).toBeGreaterThan(
@@ -102,8 +105,12 @@ describe('createEditableRouteFromImportedGeometry', () => {
   it('rejects sparse source geometry that cannot stay within the network section limit', () => {
     expect(() =>
       createEditableRouteFromImportedGeometry([
-        [0, 0],
-        [MAX_NETWORK_SECTION_DIRECT_DISTANCE_METERS + 1, 0],
+        fromWgs84([-3.7, 40.4]),
+        // Slightly more than the limit along a meridian (about 111.1 km per degree).
+        fromWgs84([
+          -3.7,
+          40.4 + (MAX_NETWORK_SECTION_DIRECT_DISTANCE_METERS + 200) / 111_132,
+        ]),
       ]),
     ).toThrow(ImportedRouteSparseGeometryError);
   });

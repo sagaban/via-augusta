@@ -12,8 +12,10 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { BASE_PATH, siteUrl } from '../site';
 import seoMetadataSource from './seoMetadata.json';
 import {
+  DEFAULT_LANGUAGE,
   LANGUAGE_METADATA,
   SUPPORTED_LANGUAGES,
   TRANSLATIONS,
@@ -22,17 +24,15 @@ import {
 } from './translations';
 
 /** Local-storage key used to preserve the explicit language selection. */
-const LANGUAGE_STORAGE_KEY = 'via-helvetica-language';
+const LANGUAGE_STORAGE_KEY = 'via-augusta-language';
 /** History-state key used to preserve language across browser-history entries. */
-const LANGUAGE_HISTORY_STATE_KEY = 'viaHelveticaLanguage';
-/** Production origin used by canonical, Open Graph, and structured-data URLs. */
-const SITE_ORIGIN = 'https://viahelvetica.ch';
+const LANGUAGE_HISTORY_STATE_KEY = 'viaAugustaLanguage';
 /** Named values substituted into translated strings such as profile ranges. */
 type TranslationParameters = Record<string, string | number>;
 
 /** Static metadata required by both generated HTML entries and runtime updates. */
 interface SeoMetadataEntry {
-  /** Root-relative path of the localized application entry. */
+  /** Path of the localized application entry, relative to the base path. */
   path: string;
   /** Open Graph locale code. */
   locale: string;
@@ -58,7 +58,7 @@ const SEO_METADATA: Record<Language, SeoMetadataEntry> = seoMetadataSource;
 interface I18nContextValue {
   /** Currently selected interface language. */
   language: Language;
-  /** Swiss locale used by Intl number formatting. */
+  /** Locale used by Intl number formatting. */
   locale: string;
   /** Changes and persists the interface language without reloading the map. */
   setLanguage: (language: Language) => void;
@@ -73,21 +73,27 @@ export function isSupportedLanguage(value: string): value is Language {
   return SUPPORTED_LANGUAGES.includes(value as Language);
 }
 
-/** Returns the localized language encoded by a root path such as `/de/`. */
+/**
+ * Returns the localized language encoded by a path such as `/es/`, ignoring
+ * the deployment base path (for example `/via-augusta/en/`).
+ */
 export function languageFromPathname(pathname: string): Language | null {
-  const firstSegment = pathname.split('/').filter(Boolean)[0];
+  const relativePath = pathname.startsWith(BASE_PATH)
+    ? pathname.slice(BASE_PATH.length)
+    : pathname;
+  const firstSegment = relativePath.split('/').filter(Boolean)[0];
   return firstSegment && isSupportedLanguage(firstSegment)
     ? firstSegment
     : null;
 }
 
-/** Resolves a browser language tag such as `de-CH` to a supported language. */
+/** Resolves a browser language tag such as `es-AR` to a supported language. */
 function languageFromTag(tag: string): Language | null {
   const language = tag.toLowerCase().split('-')[0];
   return isSupportedLanguage(language) ? language : null;
 }
 
-/** Uses the URL first, then persisted and browser preferences, then English. */
+/** Uses the URL first, then persisted and browser preferences, then Spanish. */
 function resolveInitialLanguage(): Language {
   const pathLanguage = languageFromPathname(window.location.pathname);
 
@@ -113,7 +119,7 @@ function resolveInitialLanguage(): Language {
     }
   }
 
-  return 'en';
+  return DEFAULT_LANGUAGE;
 }
 
 /** Substitutes `{name}` placeholders while leaving unknown placeholders intact. */
@@ -164,7 +170,7 @@ function synchronizeStructuredData(
 /** Keeps the already loaded document head coherent after History API changes. */
 function synchronizeDocumentMetadata(language: Language): void {
   const metadata = SEO_METADATA[language];
-  const canonicalUrl = `${SITE_ORIGIN}${metadata.path}`;
+  const canonicalUrl = `${siteUrl()}${metadata.path}`;
 
   document.documentElement.lang = language;
   document.title = metadata.title;
@@ -213,7 +219,7 @@ function synchronizeDocumentMetadata(language: Language): void {
 /** Returns a localized URL while preserving query parameters and fragments. */
 function localizedBrowserUrl(language: Language): string {
   const url = new URL(window.location.href);
-  url.pathname = SEO_METADATA[language].path;
+  url.pathname = `${BASE_PATH}${SEO_METADATA[language].path}`;
   return `${url.pathname}${url.search}${url.hash}`;
 }
 

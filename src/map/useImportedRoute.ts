@@ -1,7 +1,7 @@
 /**
  * Business context: owns the lifecycle of the single read-only GPX itinerary.
  * It validates and parses a user-selected file locally, converts geometry to
- * native LV95, reuses complete embedded elevations when possible, updates the
+ * the map projection, reuses complete embedded elevations when possible, updates the
  * purple OpenLayers display, and frames the imported route without exposing
  * file-read sessions or stale-result guards to the application shell.
  */
@@ -29,11 +29,15 @@ import { IMPORTED_ROUTE_MAX_ZOOM } from './config';
 import { updateImportedRouteDisplay } from './importedRoute';
 import { calculateResponsiveMapFitPadding } from './viewFit';
 import type { MapRuntime } from './mapRuntime';
-import {
-  fromWgs84Coordinates,
-  LV95_STANDARD_SOURCE_MATRIX_INDICES,
-  LV95_VIEW_RESOLUTIONS,
-} from './projection';
+import { fromWgs84Coordinates } from './projection';
+
+/** Web Mercator resolution in map units per CSS pixel at zoom level 0. */
+const WEB_MERCATOR_ZOOM_0_RESOLUTION = 156_543.033_928_040_97;
+
+/** Native resolution of one integer Web Mercator zoom level. */
+function webMercatorResolution(zoom: number): number {
+  return WEB_MERCATOR_ZOOM_0_RESOLUTION / 2 ** zoom;
+}
 
 /** Inputs required by the imported-GPX workflow. */
 export interface UseImportedRouteOptions {
@@ -119,17 +123,17 @@ export function calculateImportedRouteFitPadding(
 
 /** Finest native national-map resolution allowed by imported-route framing. */
 const IMPORTED_ROUTE_MIN_FIT_RESOLUTION =
-  LV95_VIEW_RESOLUTIONS[IMPORTED_ROUTE_MAX_ZOOM];
+  webMercatorResolution(IMPORTED_ROUTE_MAX_ZOOM);
 
 /**
  * Snaps one calculated fit resolution to a matrix actually published by the
- * standard swisstopo backgrounds. OpenLayers normally permits intermediate
+ * IGN backgrounds. OpenLayers normally permits intermediate
  * resolutions, which can leave a raster background visibly resampled after
  * successive GPX fits. Choosing the next coarser native matrix keeps the whole
  * itinerary visible without stretching a tile level.
  *
- * @param requiredResolution - Resolution in LV95 metres per CSS pixel needed to fit the route.
- * @returns A native standard-map resolution that still contains the complete route.
+ * @param requiredResolution - Resolution in map units per CSS pixel needed to fit the route.
+ * @returns A native zoom-level resolution that still contains the complete route.
  */
 export function snapImportedRouteFitResolution(
   requiredResolution: number,
@@ -138,26 +142,13 @@ export function snapImportedRouteFitResolution(
     requiredResolution,
     IMPORTED_ROUTE_MIN_FIT_RESOLUTION,
   );
-  let snappedResolution = LV95_VIEW_RESOLUTIONS[
-    LV95_STANDARD_SOURCE_MATRIX_INDICES[0]
-  ];
+  // Choosing the next coarser integer zoom keeps the whole itinerary visible
+  // without displaying a resampled intermediate tile level.
+  const zoom = Math.floor(
+    Math.log2(WEB_MERCATOR_ZOOM_0_RESOLUTION / boundedResolution) + 1e-9,
+  );
 
-  for (const matrixIndex of LV95_STANDARD_SOURCE_MATRIX_INDICES) {
-    if (matrixIndex > IMPORTED_ROUTE_MAX_ZOOM) {
-      break;
-    }
-
-    const nativeResolution = LV95_VIEW_RESOLUTIONS[matrixIndex];
-
-    if (nativeResolution >= boundedResolution) {
-      snappedResolution = nativeResolution;
-      continue;
-    }
-
-    break;
-  }
-
-  return snappedResolution;
+  return webMercatorResolution(Math.min(IMPORTED_ROUTE_MAX_ZOOM, zoom));
 }
 
 /** Returns whether two OpenLayers size readings describe the same viewport. */
@@ -168,11 +159,11 @@ function sizesMatch(first: Size | null, second: Size): boolean {
 /**
  * Frames a GPX only after the map has recovered from the native file picker.
  * Mobile browsers can briefly expose a stale or very small viewport while the
- * picker closes, so fitting immediately can animate to the national overview.
+ * picker closes, so fitting immediately can animate to the country overview.
  * The callback also stops silently when a newer import supersedes this one.
  *
  * @param map - Shared OpenLayers map whose viewport must be stable before fitting.
- * @param extent - LV95 extent of the imported route to keep fully visible.
+ * @param extent - Map extent of the imported route to keep fully visible.
  * @param isCurrentImport - Guard that becomes false when another import starts.
  * @returns Nothing; the fit is scheduled through animation frames.
  */

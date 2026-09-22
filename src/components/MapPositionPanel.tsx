@@ -5,6 +5,7 @@
  */
 import { useEffect } from 'react';
 import { useI18n } from '../i18n/I18nContext';
+import { toUtm } from '../map/projection';
 import type { MapPositionInspection } from '../map/useMapPositionInspection';
 
 /** Props for the temporary desktop map-position panel. */
@@ -15,22 +16,18 @@ interface MapPositionPanelProps {
   onClose: () => void;
 }
 
-/** Formats one rounded Swiss coordinate with the customary apostrophe grouping. */
-function formatSwissInteger(value: number): string {
-  const rounded = Math.round(value);
-  const sign = rounded < 0 ? '-' : '';
-  const digits = String(Math.abs(rounded));
-  return `${sign}${digits.replace(/\B(?=(\d{3})+(?!\d))/g, "'")}`;
-}
-
 /** Displays WGS 84 in the latitude, longitude order familiar to map users. */
 export function formatWgs84MapPosition(coordinate: number[]): string {
   return `${coordinate[1].toFixed(5)}, ${coordinate[0].toFixed(5)}`;
 }
 
-/** Displays native LV95 easting/northing rounded to the nearest metre. */
-export function formatLv95MapPosition(coordinate: number[]): string {
-  return `${formatSwissInteger(coordinate[0])}, ${formatSwissInteger(coordinate[1])}`;
+/**
+ * Displays ETRS89 / UTM as `zone easting northing`, rounded to the metre.
+ * The same text is accepted back by the search field.
+ */
+export function formatUtmMapPosition(coordinate: number[]): string {
+  const { zone, easting, northing } = toUtm(coordinate);
+  return `${zone} ${Math.round(easting)} ${Math.round(northing)}`;
 }
 
 /** Copies one displayed coordinate without adding hidden labels or metadata. */
@@ -59,7 +56,7 @@ export default function MapPositionPanel({
 }: MapPositionPanelProps) {
   const { t } = useI18n();
   const wgs84Text = formatWgs84MapPosition(inspection.wgs84Coordinate);
-  const lv95Text = formatLv95MapPosition(inspection.coordinate);
+  const utmText = formatUtmMapPosition(inspection.coordinate);
   let elevationText = t('mapPosition.altitudeUnavailable');
 
   if (inspection.elevationStatus === 'loading') {
@@ -131,15 +128,15 @@ export default function MapPositionPanel({
             <button
               type="button"
               className="map-position-copy"
-              aria-label={t('mapPosition.copyLv95')}
-              title={t('mapPosition.copyLv95')}
-              onClick={() => requestCopy(lv95Text)}
+              aria-label={t('mapPosition.copyUtm')}
+              title={t('mapPosition.copyUtm')}
+              onClick={() => requestCopy(utmText)}
             >
               <CopyIcon />
             </button>
             <div className="map-position-value">
-              <span>{t('mapPosition.lv95')}</span>
-              <strong>{lv95Text}</strong>
+              <span>{t('mapPosition.utm')}</span>
+              <strong>{utmText}</strong>
             </div>
           </div>
 

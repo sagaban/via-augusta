@@ -1,36 +1,24 @@
 /**
- * Business context: protects the product defaults and browser persistence used
- * by optional rendered map layers. New visitors must not receive the green
- * SwitzerlandMobility portrayal until they explicitly enable it.
+ * Business context: protects the product default and browser persistence used
+ * by the optional hiking-route overlay.
  */
 import { beforeEach, describe, expect, it } from 'vitest';
-import {
-  resolveInitialHikingTrailsVisibility,
-  resolveInitialSwitzerlandMobilityHikingVisibility,
-} from './useMapViewControls';
+import { resolveInitialHikingTrailsVisibility } from './useMapViewControls';
 
-const HIKING_TRAILS_STORAGE_KEY = 'via-helvetica.hiking-trails-visible';
-const SWITZERLAND_MOBILITY_HIKING_STORAGE_KEY =
-  'via-helvetica.switzerland-mobility-hiking-visible';
+const HIKING_TRAILS_STORAGE_KEY = 'via-augusta.hiking-trails-visible';
 
 describe('initial rendered-layer visibility', () => {
   beforeEach(() => {
     window.localStorage.clear();
   });
 
-  it('keeps ordinary hiking trails enabled and SwitzerlandMobility disabled for new visitors', () => {
+  it('keeps the hiking-route overlay enabled for new visitors', () => {
     expect(resolveInitialHikingTrailsVisibility()).toBe(true);
-    expect(resolveInitialSwitzerlandMobilityHikingVisibility()).toBe(false);
   });
 
-  it('restores explicit layer choices from browser storage', () => {
+  it('restores an explicit choice from browser storage', () => {
     window.localStorage.setItem(HIKING_TRAILS_STORAGE_KEY, 'false');
-    window.localStorage.setItem(
-      SWITZERLAND_MOBILITY_HIKING_STORAGE_KEY,
-      'true',
-    );
 
     expect(resolveInitialHikingTrailsVisibility()).toBe(false);
-    expect(resolveInitialSwitzerlandMobilityHikingVisibility()).toBe(true);
   });
 });

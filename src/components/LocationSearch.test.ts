@@ -38,7 +38,7 @@ describe('LocationSearch keyboard navigation', () => {
 
   beforeEach(() => {
     clearLocationSearchCache();
-    window.localStorage.setItem('via-helvetica-language', 'en');
+    window.localStorage.setItem('via-augusta-language', 'en');
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
@@ -66,32 +66,39 @@ describe('LocationSearch keyboard navigation', () => {
   it('supports Home and End and keeps the active option visible', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({
-        results: [
+        type: 'FeatureCollection',
+        features: [
           {
-            id: '1',
-            attrs: {
-              label: 'Bern',
-              lat: 46.948,
-              lon: 7.4474,
-              origin: 'gazetteer',
+            geometry: { coordinates: [-4.0152, 40.7288] },
+            properties: {
+              osm_type: 'N',
+              osm_id: 1,
+              osm_key: 'place',
+              osm_value: 'village',
+              name: 'Navacerrada',
+              state: 'Comunidad de Madrid',
             },
           },
           {
-            id: '2',
-            attrs: {
-              label: 'Bern Bahnhof',
-              lat: 46.949,
-              lon: 7.439,
-              origin: 'gazetteer',
+            geometry: { coordinates: [-4.0578, 40.7408] },
+            properties: {
+              osm_type: 'N',
+              osm_id: 2,
+              osm_key: 'place',
+              osm_value: 'village',
+              name: 'Cercedilla',
+              state: 'Comunidad de Madrid',
             },
           },
           {
-            id: '3',
-            attrs: {
-              label: 'Bern Altstadt',
-              lat: 46.9485,
-              lon: 7.452,
-              origin: 'gazetteer',
+            geometry: { coordinates: [-3.8805, 40.9039] },
+            properties: {
+              osm_type: 'N',
+              osm_id: 3,
+              osm_key: 'place',
+              osm_value: 'village',
+              name: 'Rascafría',
+              state: 'Comunidad de Madrid',
             },
           },
         ],
@@ -100,7 +107,7 @@ describe('LocationSearch keyboard navigation', () => {
 
     vi.stubGlobal('fetch', fetchMock);
     await searchLocations(
-      'bern',
+      'sierra',
       'en',
       new AbortController().signal,
     );
@@ -123,7 +130,7 @@ describe('LocationSearch keyboard navigation', () => {
     expect(input).not.toBeNull();
 
     await act(async () => {
-      setInputValue(input!, 'bern');
+      setInputValue(input!, 'sierra');
     });
 
     const options = Array.from(
@@ -200,7 +207,7 @@ describe('LocationSearch coordinate entry', () => {
 
   beforeEach(() => {
     clearLocationSearchCache();
-    window.localStorage.setItem('via-helvetica-language', 'en');
+    window.localStorage.setItem('via-augusta-language', 'en');
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
@@ -252,12 +259,12 @@ describe('LocationSearch coordinate entry', () => {
     expect(input?.hasAttribute('aria-controls')).toBe(false);
 
     await act(async () => {
-      setInputValue(input!, "2'671'804, 1'204'459");
+      setInputValue(input!, '30T 440291 4474254');
     });
 
     const option = container.querySelector<HTMLElement>('[role="option"]');
-    expect(option?.textContent).toContain("2'671'804, 1'204'459");
-    expect(option?.textContent).toContain('LV95 coordinates');
+    expect(option?.textContent).toContain('30 440291 4474254');
+    expect(option?.textContent).toContain('ETRS89 UTM coordinates');
     expect(option?.tabIndex).toBe(-1);
     expect(input?.getAttribute('aria-controls')).toBe(
       option?.closest('[role="listbox"]')?.id,
@@ -275,8 +282,8 @@ describe('LocationSearch coordinate entry', () => {
 
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(onSelect.mock.calls[0][0]).toMatchObject({
-      origin: 'lv95',
-      label: "2'671'804, 1'204'459",
+      origin: 'utm',
+      label: '30 440291 4474254',
     });
     expect(input?.hasAttribute('aria-controls')).toBe(false);
     expect(fetchMock).not.toHaveBeenCalled();
@@ -285,7 +292,7 @@ describe('LocationSearch coordinate entry', () => {
   it('keeps unfinished coordinates local while preserving postal-code search', async () => {
     vi.useFakeTimers();
     const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse({ results: [] }),
+      jsonResponse({ features: [] }),
     );
 
     vi.stubGlobal('fetch', fetchMock);
@@ -307,7 +314,7 @@ describe('LocationSearch coordinate entry', () => {
     const input = container.querySelector<HTMLInputElement>('input');
 
     await act(async () => {
-      setInputValue(input!, "2'671'804, 1'20");
+      setInputValue(input!, '30 440291 44');
     });
     await act(async () => {
       await vi.advanceTimersByTimeAsync(400);
@@ -317,7 +324,7 @@ describe('LocationSearch coordinate entry', () => {
     expect(input?.getAttribute('aria-expanded')).toBe('false');
 
     await act(async () => {
-      setInputValue(input!, '1204');
+      setInputValue(input!, '28013');
     });
     await act(async () => {
       await vi.advanceTimersByTimeAsync(400);
@@ -349,7 +356,7 @@ describe('LocationSearch coordinate entry', () => {
     const input = container.querySelector<HTMLInputElement>('input');
 
     await act(async () => {
-      setInputValue(input!, '46.987, 8.383');
+      setInputValue(input!, '40.417, -3.704');
     });
 
     await act(async () => {
@@ -362,12 +369,12 @@ describe('LocationSearch coordinate entry', () => {
     });
 
     await act(async () => {
-      setInputValue(input!, '46.987, 8.384');
+      setInputValue(input!, '40.417, -3.705');
     });
 
     const option = container.querySelector<HTMLElement>('[role="option"]');
 
-    expect(option?.textContent).toContain('46.987, 8.384');
+    expect(option?.textContent).toContain('40.417, -3.705');
     expect(onClear).toHaveBeenCalledTimes(1);
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -394,7 +401,7 @@ describe('LocationSearch coordinate entry', () => {
     const input = container.querySelector<HTMLInputElement>('input');
 
     await act(async () => {
-      setInputValue(input!, '46.987, 8.383');
+      setInputValue(input!, '40.417, -3.704');
     });
 
     await act(async () => {

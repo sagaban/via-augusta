@@ -1,70 +1,36 @@
 {
-  "fr": {
-    "path": "/fr/",
-    "locale": "fr_CH",
-    "title": "Via Helvetica – Planificateur d’itinéraires de randonnée en Suisse",
-    "description": "Planifiez des itinéraires de randonnée en Suisse sur les cartes officielles, consultez le dénivelé et les informations sur les sentiers, puis importez ou exportez des fichiers GPX.",
-    "socialDescription": "Planifiez des randonnées sur les cartes officielles suisses, consultez le dénivelé et les sentiers, puis importez ou exportez des fichiers GPX.",
-    "imageAlt": "Deux randonneurs marchant vers une montagne enneigée dans les Alpes suisses",
-    "browserRequirements": "Nécessite JavaScript et un navigateur web moderne.",
-    "javascriptRequirement": "Cette application nécessite JavaScript pour afficher la carte interactive.",
+  "es": {
+    "path": "es/",
+    "locale": "es_ES",
+    "title": "Via Augusta – Planificador de rutas de senderismo en España",
+    "description": "Planifica rutas de senderismo en España sobre los mapas oficiales del IGN, consulta el desnivel, el perfil y el tiempo estimado, e importa o exporta archivos GPX. Gratis y de código abierto.",
+    "socialDescription": "Planifica rutas de senderismo sobre los mapas del IGN, consulta el desnivel y los senderos GR/PR, e importa o exporta archivos GPX.",
+    "imageAlt": "Sendero de montaña en España",
+    "browserRequirements": "Requiere JavaScript y un navegador web moderno.",
+    "javascriptRequirement": "Esta aplicación necesita JavaScript para mostrar el mapa interactivo.",
     "featureList": [
-      "Planification d’itinéraires de randonnée sur les cartes officielles suisses",
-      "Routage expérimental swissTLM3D exécuté dans le navigateur",
-      "Profil d’altitude et estimation du temps de marche",
-      "Import et export GPX",
-      "Fermetures de chemins, zones de danger et informations sur les transports publics"
-    ]
-  },
-  "de": {
-    "path": "/de/",
-    "locale": "de_CH",
-    "title": "Via Helvetica – Routenplaner für Wanderungen in der Schweiz",
-    "description": "Planen Sie Wanderungen in der Schweiz auf offiziellen Karten, prüfen Sie Höhenprofil und Weginformationen und importieren oder exportieren Sie GPX-Dateien.",
-    "socialDescription": "Planen Sie Wanderungen auf offiziellen Schweizer Karten, prüfen Sie Höhenprofil und Wege und importieren oder exportieren Sie GPX-Dateien.",
-    "imageAlt": "Zwei Wanderer auf dem Weg zu einem schneebedeckten Berg in den Schweizer Alpen",
-    "browserRequirements": "Erfordert JavaScript und einen modernen Webbrowser.",
-    "javascriptRequirement": "Diese Anwendung benötigt JavaScript, um die interaktive Karte anzuzeigen.",
-    "featureList": [
-      "Planung von Wanderrouten auf offiziellen Schweizer Karten",
-      "Experimentelles swissTLM3D-Routing direkt im Browser",
-      "Höhenprofil und Schätzung der Wanderzeit",
-      "GPX-Import und -Export",
-      "Wegsperrungen, Gefahrenzonen und Informationen zum öffentlichen Verkehr"
-    ]
-  },
-  "it": {
-    "path": "/it/",
-    "locale": "it_CH",
-    "title": "Via Helvetica – Pianificatore di itinerari escursionistici in Svizzera",
-    "description": "Pianifica itinerari escursionistici in Svizzera sulle carte ufficiali, consulta dislivello e informazioni sui sentieri e importa o esporta file GPX.",
-    "socialDescription": "Pianifica escursioni sulle carte ufficiali svizzere, consulta dislivello e sentieri e importa o esporta file GPX.",
-    "imageAlt": "Due escursionisti in cammino verso una montagna innevata nelle Alpi svizzere",
-    "browserRequirements": "Richiede JavaScript e un browser web moderno.",
-    "javascriptRequirement": "Questa applicazione richiede JavaScript per visualizzare la mappa interattiva.",
-    "featureList": [
-      "Pianificazione di itinerari escursionistici sulle carte ufficiali svizzere",
-      "Routing sperimentale swissTLM3D eseguito nel browser",
-      "Profilo altimetrico e stima del tempo di cammino",
-      "Importazione ed esportazione GPX",
-      "Chiusure dei sentieri, zone di pericolo e informazioni sui trasporti pubblici"
+      "Planificación de rutas de senderismo sobre los mapas oficiales del IGN",
+      "Trazado que sigue caminos y senderos de OpenStreetMap",
+      "Perfil de altitud y tiempo de marcha según el método MIDE",
+      "Importación y exportación GPX",
+      "Capa de senderos GR, PR y SL"
     ]
   },
   "en": {
-    "path": "/en/",
-    "locale": "en_CH",
-    "title": "Via Helvetica – Swiss Hiking Route Planner",
-    "description": "Plan hiking routes in Switzerland on official maps, inspect elevation and trail information, and import or export GPX files. Free and open source.",
-    "socialDescription": "Plan hiking routes on official Swiss maps, inspect elevation and trail information, and import or export GPX files. Free and open source.",
-    "imageAlt": "Two hikers walking toward a snow-covered mountain in the Swiss Alps",
+    "path": "en/",
+    "locale": "en_GB",
+    "title": "Via Augusta – Hiking Route Planner for Spain",
+    "description": "Plan hiking routes in Spain on official IGN maps, check elevation, profile and estimated walking time, and import or export GPX files. Free and open source.",
+    "socialDescription": "Plan hiking routes on official Spanish IGN maps, check elevation and GR/PR trails, and import or export GPX files.",
+    "imageAlt": "Mountain trail in Spain",
     "browserRequirements": "Requires JavaScript and a modern web browser.",
     "javascriptRequirement": "This application requires JavaScript to display the interactive map.",
     "featureList": [
-      "Hiking route planning on official Swiss maps",
-      "Experimental browser-side swissTLM3D routing",
-      "Elevation profile and hiking-time estimate",
+      "Hiking route planning on official Spanish IGN maps",
+      "Path-following routing on OpenStreetMap trails",
+      "Elevation profile and MIDE walking-time estimate",
       "GPX import and export",
-      "Hiking closures, danger zones and public-transport information"
+      "GR, PR and SL trail overlay"
     ]
   }
 }

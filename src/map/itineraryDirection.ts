@@ -22,7 +22,7 @@ const DIRECTION_ARROW_SPACING_PX = 150;
  */
 const MINIMUM_VISIBLE_ROUTE_LENGTH_PX = 105;
 /**
- * Maximum map resolution in LV95 metres per screen pixel where direction symbols
+ * Maximum map resolution in map units per screen pixel where direction symbols
  * remain trustworthy. Broader views hide them because local bends collapse and a
  * tangent can become visually misleading.
  */
@@ -147,11 +147,11 @@ interface DirectionLineIndex {
   cumulativeDistances: number[];
   /** Coordinate indexes ending non-degenerate segments. */
   segmentEndIndexes: number[];
-  /** Complete planar length in native LV95 metres. */
+  /** Complete planar length in map units. */
   totalLength: number;
 }
 
-/** Returns planar LV95 distance between two route coordinates. */
+/** Returns planar map distance between two route coordinates. */
 function coordinateDistance(first: Coordinate, second: Coordinate): number {
   return Math.hypot(second[0] - first[0], second[1] - first[1]);
 }

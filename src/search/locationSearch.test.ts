@@ -1,10 +1,11 @@
 /**
- * Regression tests for the GeoAdmin location-search adapter. The suite protects
- * cache identity, provider validation, label sanitization, and deduplication
- * without contacting the live SearchServer endpoint.
+ * Regression tests for the Photon location-search adapter. The suite protects
+ * cache identity, request filters, provider validation, category mapping, and
+ * deduplication without contacting the live Photon endpoint.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  classifyPhotonOrigin,
   clearLocationSearchCache,
   getCachedLocationSearch,
   searchLocations,
@@ -21,20 +22,30 @@ function jsonResponse(
   } as unknown as Response;
 }
 
-function providerItem(
-  id: string,
-  label: unknown,
-  latitude: unknown,
-  longitude: unknown,
-  origin: unknown = 'gazetteer',
+function photonFeature(
+  id: number,
+  name: unknown,
+  coordinates: unknown,
+  options: {
+    key?: string;
+    value?: string;
+    city?: string;
+    county?: string;
+    state?: string;
+  } = {},
 ) {
   return {
-    id,
-    attrs: {
-      label,
-      lat: latitude,
-      lon: longitude,
-      origin,
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates },
+    properties: {
+      osm_type: 'N',
+      osm_id: id,
+      osm_key: options.key ?? 'place',
+      osm_value: options.value ?? 'village',
+      name,
+      city: options.city,
+      county: options.county,
+      state: options.state,
     },
   };
 }
@@ -44,108 +55,102 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+describe('location search request', () => {
+  it('limits results to the Spanish extent and hiking-relevant OSM tags', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ features: [] }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await searchLocations('Peñalara', 'es', new AbortController().signal);
+    await searchLocations('Peñalara', 'en', new AbortController().signal);
+
+    const spanishUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    const englishUrl = new URL(String(fetchMock.mock.calls[1][0]));
+
+    expect(spanishUrl.hostname).toBe('photon.komoot.io');
+    expect(spanishUrl.searchParams.get('q')).toBe('Peñalara');
+    expect(spanishUrl.searchParams.get('bbox')).toBe('-18.6,27.3,4.9,44.2');
+    expect(spanishUrl.searchParams.getAll('osm_tag')).toContain('natural');
+    expect(spanishUrl.searchParams.getAll('osm_tag')).toContain('place');
+    expect(spanishUrl.searchParams.has('lang')).toBe(false);
+    expect(englishUrl.searchParams.get('lang')).toBe('en');
+  });
+});
+
 describe('location search cache', () => {
   it('reuses normalized exact searches while keeping languages independent', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
         jsonResponse({
-          results: [
-            providerItem(
-              'fr-1',
-              '<b>Genève</b> <i>ville</i>',
-              46.2044,
-              6.1432,
-            ),
+          features: [
+            photonFeature(1, 'Sevilla', [-5.9845, 37.3891], {
+              value: 'city',
+              state: 'Andalucía',
+            }),
           ],
         }),
       )
       .mockResolvedValueOnce(
         jsonResponse({
-          results: [
-            providerItem(
-              'de-1',
-              '<b>Genf</b> <i>Stadt</i>',
-              46.2044,
-              6.1432,
-            ),
+          features: [
+            photonFeature(1, 'Seville', [-5.9845, 37.3891], {
+              value: 'city',
+              state: 'Andalusia',
+            }),
           ],
         }),
       );
 
     vi.stubGlobal('fetch', fetchMock);
 
-    const frenchResults = await searchLocations(
-      'Genève',
-      'fr',
+    const spanishResults = await searchLocations(
+      'Cádiz',
+      'es',
       new AbortController().signal,
     );
     const normalizedCacheHit = await searchLocations(
-      '  GENE\u0300VE  ',
-      'fr',
+      '  CÁDIZ  ',
+      'es',
       new AbortController().signal,
     );
-    const germanResults = await searchLocations(
-      'Genève',
-      'de',
+    const englishResults = await searchLocations(
+      'Cádiz',
+      'en',
       new AbortController().signal,
     );
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(frenchResults[0].label).toBe('Genève');
-    expect(normalizedCacheHit).toEqual(frenchResults);
-    expect(normalizedCacheHit).not.toBe(frenchResults);
-    expect(germanResults[0].label).toBe('Genf');
+    expect(spanishResults[0].label).toBe('Sevilla, Andalucía');
+    expect(normalizedCacheHit).toEqual(spanishResults);
+    expect(normalizedCacheHit).not.toBe(spanishResults);
+    expect(englishResults[0].label).toBe('Seville, Andalusia');
   });
 
   it('caches empty successful responses but never caches failures', async () => {
     const fetchMock = vi
       .fn()
-      .mockResolvedValueOnce(jsonResponse({ results: [] }))
+      .mockResolvedValueOnce(jsonResponse({ features: [] }))
       .mockResolvedValueOnce(jsonResponse({}, 503))
       .mockResolvedValueOnce(
         jsonResponse({
-          results: [
-            providerItem(
-              'retry-1',
-              'Lausanne',
-              46.5197,
-              6.6323,
-            ),
-          ],
+          features: [photonFeature(2, 'Cercedilla', [-4.0567, 40.7406])],
         }),
       );
 
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(
-      searchLocations(
-        'no-result-query',
-        'en',
-        new AbortController().signal,
-      ),
+      searchLocations('no-result-query', 'en', new AbortController().signal),
     ).resolves.toEqual([]);
     await expect(
-      searchLocations(
-        'no-result-query',
-        'en',
-        new AbortController().signal,
-      ),
+      searchLocations('no-result-query', 'en', new AbortController().signal),
     ).resolves.toEqual([]);
 
     await expect(
-      searchLocations(
-        'retry-query',
-        'en',
-        new AbortController().signal,
-      ),
+      searchLocations('retry-query', 'en', new AbortController().signal),
     ).rejects.toThrow('HTTP 503');
     await expect(
-      searchLocations(
-        'retry-query',
-        'en',
-        new AbortController().signal,
-      ),
+      searchLocations('retry-query', 'en', new AbortController().signal),
     ).resolves.toHaveLength(1);
 
     expect(fetchMock).toHaveBeenCalledTimes(3);
@@ -154,17 +159,10 @@ describe('location search cache', () => {
   it('evicts the least recently used query after 64 exact entries', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = new URL(String(input));
-      const searchText = url.searchParams.get('searchText') ?? '';
+      const searchText = url.searchParams.get('q') ?? '';
 
       return jsonResponse({
-        results: [
-          providerItem(
-            searchText,
-            searchText,
-            46.5,
-            7.5,
-          ),
-        ],
+        features: [photonFeature(3, searchText, [-3.7, 40.4])],
       });
     });
 
@@ -173,38 +171,38 @@ describe('location search cache', () => {
     for (let index = 0; index < 65; index += 1) {
       await searchLocations(
         `place-${index}`,
-        'fr',
+        'es',
         new AbortController().signal,
       );
     }
 
-    expect(
-      getCachedLocationSearch('place-0', 'fr'),
-    ).toBeNull();
-    expect(
-      getCachedLocationSearch('place-64', 'fr'),
-    ).toHaveLength(1);
+    expect(getCachedLocationSearch('place-0', 'es')).toBeNull();
+    expect(getCachedLocationSearch('place-64', 'es')).toHaveLength(1);
 
-    await searchLocations(
-      'place-0',
-      'fr',
-      new AbortController().signal,
-    );
+    await searchLocations('place-0', 'es', new AbortController().signal);
 
     expect(fetchMock).toHaveBeenCalledTimes(66);
   });
 });
 
 describe('location search provider normalization', () => {
-  it('rejects empty or coerced coordinates and keeps valid numeric strings', async () => {
+  it('rejects missing or non-numeric coordinates and unsupported objects', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({
-        results: [
-          providerItem('empty-lat', 'Empty latitude', '', 7.1),
-          providerItem('blank-lon', 'Blank longitude', 46.1, '   '),
-          providerItem('null-lat', 'Null latitude', null, 7.1),
-          providerItem('boolean-lon', 'Boolean longitude', 46.1, true),
-          providerItem('valid', 'Valid place', '46.25', '7.75'),
+        features: [
+          photonFeature(10, 'String latitude', [-3.7, '40.4']),
+          photonFeature(11, 'Missing coordinates', undefined),
+          photonFeature(12, '', [-3.7, 40.4]),
+          photonFeature(13, 'Bus stop', [-3.7, 40.4], {
+            key: 'highway',
+            value: 'bus_stop',
+          }),
+          photonFeature(14, 'Peñalara', [-3.9561, 40.85], {
+            key: 'natural',
+            value: 'peak',
+            county: 'Segovia',
+            state: 'Castilla y León',
+          }),
         ],
       }),
     );
@@ -213,53 +211,40 @@ describe('location search provider normalization', () => {
 
     const results = await searchLocations(
       'coordinate-validation',
-      'en',
+      'es',
       new AbortController().signal,
     );
 
     expect(results).toEqual([
       {
-        id: 'gazetteer:valid',
-        label: 'Valid place',
-        origin: 'gazetteer',
-        latitude: 46.25,
-        longitude: 7.75,
+        id: 'peak:N14',
+        label: 'Peñalara, Segovia, Castilla y León',
+        origin: 'peak',
+        latitude: 40.85,
+        longitude: -3.9561,
       },
     ]);
   });
 
-  it('normalizes safe text and removes strict duplicate places', async () => {
+  it('removes duplicate labels within one category but keeps other categories', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({
-        results: [
-          providerItem(
-            'first',
-            '<b>Genève</b> <i>classification</i> &amp; environs',
-            46.2044,
-            6.1432,
-            'gg25',
-          ),
-          providerItem(
-            'duplicate',
-            '  Genève &amp; environs  ',
-            46.2044,
-            6.1432,
-            'gg25',
-          ),
-          providerItem(
-            'different-position',
-            'Genève &amp; environs',
-            46.21,
-            6.15,
-            'gg25',
-          ),
-          providerItem(
-            'invalid-origin',
-            'Ignored provider item',
-            46.2,
-            6.1,
-            'unknown',
-          ),
+        features: [
+          photonFeature(20, 'Teide', [-16.6423, 28.2727], {
+            key: 'natural',
+            value: 'volcano',
+            county: 'Santa Cruz de Tenerife',
+          }),
+          photonFeature(21, '  Teide  ', [-16.64, 28.27], {
+            key: 'natural',
+            value: 'volcano',
+            county: 'Santa Cruz de Tenerife',
+          }),
+          photonFeature(22, 'Teide', [-16.6429, 28.2734], {
+            key: 'place',
+            value: 'locality',
+            county: 'Santa Cruz de Tenerife',
+          }),
         ],
       }),
     );
@@ -268,18 +253,29 @@ describe('location search provider normalization', () => {
 
     const results = await searchLocations(
       'label-normalization',
-      'fr',
+      'es',
       new AbortController().signal,
     );
 
-    expect(results).toHaveLength(2);
-    expect(results[0]).toMatchObject({
-      id: 'gg25:first',
-      label: 'Genève & environs',
-    });
-    expect(results[1]).toMatchObject({
-      id: 'gg25:different-position',
-      label: 'Genève & environs',
-    });
+    expect(results.map((result) => [result.origin, result.label])).toEqual([
+      ['peak', 'Teide, Santa Cruz de Tenerife'],
+      ['locality', 'Teide, Santa Cruz de Tenerife'],
+    ]);
+  });
+});
+
+describe('classifyPhotonOrigin', () => {
+  it.each([
+    ['place', 'village', 'locality'],
+    ['natural', 'peak', 'peak'],
+    ['natural', 'saddle', 'peak'],
+    ['mountain_pass', 'yes', 'peak'],
+    ['tourism', 'alpine_hut', 'hut'],
+    ['boundary', 'national_park', 'area'],
+    ['natural', 'spring', 'nature'],
+    ['waterway', 'waterfall', 'nature'],
+    ['shop', 'travel_agency', null],
+  ])('maps %s=%s to %s', (key, value, expected) => {
+    expect(classifyPhotonOrigin(key, value)).toBe(expected);
   });
 });

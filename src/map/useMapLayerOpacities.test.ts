@@ -24,9 +24,7 @@ import {
 } from './useMapLayerOpacities';
 
 const HIKING_TRAILS_STORAGE_KEY =
-  'via-helvetica.hiking-trails-opacity';
-const TRAIL_CLOSURES_STORAGE_KEY =
-  'via-helvetica.trail-closures-opacity';
+  'via-augusta.hiking-trails-opacity';
 
 interface OpacityHarnessProps {
   mapRuntimeRef: RefObject<MapRuntime | null>;
@@ -52,10 +50,6 @@ function OpacityHarness({
 function createRuntimeHarness() {
   return {
     setHikingTrailsOpacity: vi.fn(),
-    setSwitzerlandMobilityHikingOpacity: vi.fn(),
-    setTrailClosuresOpacity: vi.fn(),
-    setShootingDangerZonesOpacity: vi.fn(),
-    setPublicTransportStopsOpacity: vi.fn(),
   } as unknown as MapRuntime;
 }
 
@@ -84,26 +78,22 @@ describe('map information-layer opacity preferences', () => {
   });
 
   it(
-    'starts the yellow hiking portrayal more strongly than the green routes',
+    'starts the hiking-route overlay at its readable default',
     () => {
       const opacities = resolveInitialMapLayerOpacities();
 
       expect(opacities.hikingTrails).toBe(0.8);
-      expect(opacities.switzerlandMobilityHiking).toBe(0.6);
-      expect(opacities.trailClosures).toBe(0.8);
       expect(opacities).toEqual(DEFAULT_MAP_LAYER_OPACITIES);
     },
   );
 
   it('restores valid ratios and ignores malformed stored values', () => {
     window.localStorage.setItem(HIKING_TRAILS_STORAGE_KEY, '0.35');
-    window.localStorage.setItem(TRAIL_CLOSURES_STORAGE_KEY, 'unexpected');
+    expect(resolveInitialMapLayerOpacities().hikingTrails).toBe(0.35);
 
-    const opacities = resolveInitialMapLayerOpacities();
-
-    expect(opacities.hikingTrails).toBe(0.35);
-    expect(opacities.trailClosures).toBe(
-      DEFAULT_MAP_LAYER_OPACITIES.trailClosures,
+    window.localStorage.setItem(HIKING_TRAILS_STORAGE_KEY, 'unexpected');
+    expect(resolveInitialMapLayerOpacities().hikingTrails).toBe(
+      DEFAULT_MAP_LAYER_OPACITIES.hikingTrails,
     );
   });
 
@@ -127,7 +117,7 @@ describe('map information-layer opacity preferences', () => {
     expect(normalizeMapLayerOpacity(Number.NaN)).toBe(1);
   });
 
-  it('persists and applies only the layer changed by the visitor', async () => {
+  it('persists and applies the visitor choice without writing defaults', async () => {
     const runtime = createRuntimeHarness();
     const mapRuntimeRef: RefObject<MapRuntime | null> = {
       current: runtime,
@@ -153,12 +143,6 @@ describe('map information-layer opacity preferences', () => {
     // mounting the React controller must not turn them into user preferences.
     expect(setItemSpy).not.toHaveBeenCalled();
     expect(runtime.setHikingTrailsOpacity).not.toHaveBeenCalled();
-    expect(
-      runtime.setSwitzerlandMobilityHikingOpacity,
-    ).not.toHaveBeenCalled();
-    expect(runtime.setTrailClosuresOpacity).not.toHaveBeenCalled();
-    expect(runtime.setShootingDangerZonesOpacity).not.toHaveBeenCalled();
-    expect(runtime.setPublicTransportStopsOpacity).not.toHaveBeenCalled();
 
     await act(async () => {
       controllerRef.current?.setLayerOpacity('hikingTrails', 0.5);
@@ -171,11 +155,5 @@ describe('map information-layer opacity preferences', () => {
     );
     expect(runtime.setHikingTrailsOpacity).toHaveBeenCalledTimes(1);
     expect(runtime.setHikingTrailsOpacity).toHaveBeenCalledWith(0.5);
-    expect(
-      runtime.setSwitzerlandMobilityHikingOpacity,
-    ).not.toHaveBeenCalled();
-    expect(runtime.setTrailClosuresOpacity).not.toHaveBeenCalled();
-    expect(runtime.setShootingDangerZonesOpacity).not.toHaveBeenCalled();
-    expect(runtime.setPublicTransportStopsOpacity).not.toHaveBeenCalled();
   });
 });

@@ -1,7 +1,7 @@
 {
-  "name": "via-helvetica",
+  "name": "via-augusta",
   "private": true,
-  "version": "1.7.2",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "generate:localized-pages": "node scripts/generate-localized-pages.mjs",
@@ -11,16 +11,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "generate:routing-geometry": "python scripts/generate-routing-geometry-cells.py",
-    "generate:precomputed-binary-routing": "node scripts/generate-precomputed-binary-routing-graph.mjs",
-    "verify:precomputed-binary-routing": "node scripts/verify-routing-dataset.mjs",
-    "verify:published-routing": "node scripts/verify-published-routing-dataset.mjs",
-    "download:public-transport-stops-source": "node scripts/download-public-transport-stops-source.mjs",
-    "prepare:public-transport-stops-local": "node scripts/prepare-local-public-transport-stops.mjs",
-    "prepare:public-transport-stops-release": "node scripts/prepare-local-public-transport-stops.mjs",
-    "verify:published-public-transport-stops": "node scripts/verify-published-public-transport-stops.mjs",
-    "verify:public-transport-stops-release": "node scripts/verify-public-transport-stops-release.mjs"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "ol": "^10.9.0",

@@ -33,16 +33,18 @@ describe('calculateImportedRouteFitPadding', () => {
 });
 
 describe('snapImportedRouteFitResolution', () => {
-  it('uses the next coarser native WMTS matrix so the complete route still fits', () => {
-    expect(snapImportedRouteFitResolution(3.2)).toBe(5);
-    expect(snapImportedRouteFitResolution(0.8)).toBe(1);
+  const zoomResolution = (zoom: number) => 156_543.033_928_040_97 / 2 ** zoom;
+
+  it('uses the next coarser integer zoom so the complete route still fits', () => {
+    expect(snapImportedRouteFitResolution(zoomResolution(12) * 0.9)).toBeCloseTo(
+      zoomResolution(12),
+    );
+    expect(snapImportedRouteFitResolution(zoomResolution(10))).toBeCloseTo(
+      zoomResolution(10),
+    );
   });
 
-  it('skips unpublished matrix 24 instead of resampling the standard base map', () => {
-    expect(snapImportedRouteFitResolution(1.4)).toBe(2);
-  });
-
-  it('never frames a short GPX beyond the configured native maximum zoom', () => {
-    expect(snapImportedRouteFitResolution(0.2)).toBe(0.5);
+  it('never frames a short GPX beyond the configured maximum zoom', () => {
+    expect(snapImportedRouteFitResolution(0.01)).toBeCloseTo(zoomResolution(17));
   });
 });

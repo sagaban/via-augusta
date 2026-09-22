@@ -1,22 +1,26 @@
 /**
- * Business context: protects the WGS 84/LV95 exchange boundary used by GPX,
- * search, and browser geolocation. Batch conversion must preserve the exact
- * coordinate order and numerical result of the established single-point API.
+ * Business context: protects the WGS 84 / Web Mercator exchange boundary used
+ * by GPX, search, routing, and browser geolocation, plus the ETRS89 / UTM
+ * conversion shown to Spanish users. Batch conversion must preserve the exact
+ * coordinate order and numerical result of the single-point API.
  */
 import { describe, expect, it } from 'vitest';
 import {
   fromWgs84,
   fromWgs84Coordinates,
+  toUtm,
   toWgs84,
   toWgs84Coordinates,
+  utmToWgs84,
+  utmZoneForLongitude,
 } from './projection';
 
 describe('projection coordinate batches', () => {
-  it('matches single-point WGS 84 to LV95 conversion without mutating input', () => {
+  it('matches single-point WGS 84 to map conversion without mutating input', () => {
     const coordinates = [
-      [6.1432, 46.2044],
-      [7.4474, 46.9479],
-      [8.5417, 47.3769],
+      [-3.7038, 40.4168],
+      [2.1734, 41.3851],
+      [-16.2519, 28.4636],
     ];
     const original = coordinates.map((coordinate) => [...coordinate]);
 
@@ -32,13 +36,11 @@ describe('projection coordinate batches', () => {
     }
   });
 
-  it('matches single-point LV95 to WGS 84 conversion and handles empty arrays', () => {
-    const coordinates = [
-      [2_500_000, 1_117_000],
-      [2_600_000, 1_200_000],
-      [2_683_000, 1_248_000],
-    ];
-
+  it('round-trips map coordinates to WGS 84 and handles empty arrays', () => {
+    const coordinates = fromWgs84Coordinates([
+      [-5.9845, 37.3891],
+      [-0.3763, 39.4699],
+    ]);
     const geographic = toWgs84Coordinates(coordinates);
 
     for (let index = 0; index < coordinates.length; index += 1) {
@@ -49,5 +51,27 @@ describe('projection coordinate batches', () => {
 
     expect(fromWgs84Coordinates([])).toEqual([]);
     expect(toWgs84Coordinates([])).toEqual([]);
+  });
+});
+
+describe('ETRS89 / UTM', () => {
+  it('chooses the natural zone and clamps it to the Spanish zones', () => {
+    expect(utmZoneForLongitude(-16.5)).toBe(28);
+    expect(utmZoneForLongitude(-8.5)).toBe(29);
+    expect(utmZoneForLongitude(-3.7)).toBe(30);
+    expect(utmZoneForLongitude(2.2)).toBe(31);
+    expect(utmZoneForLongitude(12)).toBe(31);
+  });
+
+  it('converts Puerta del Sol to zone 30 and back', () => {
+    const utm = toUtm(fromWgs84([-3.7038, 40.4168]));
+
+    expect(utm.zone).toBe(30);
+    expect(utm.easting).toBeCloseTo(440_291, -1);
+    expect(utm.northing).toBeCloseTo(4_474_254, -1);
+
+    const [longitude, latitude] = utmToWgs84(utm);
+    expect(longitude).toBeCloseTo(-3.7038, 6);
+    expect(latitude).toBeCloseTo(40.4168, 6);
   });
 });

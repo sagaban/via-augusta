@@ -20,8 +20,8 @@ function LanguageProbe() {
     createElement('output', { 'data-language': true }, language),
     createElement(
       'button',
-      { type: 'button', onClick: () => setLanguage('de') },
-      'DE',
+      { type: 'button', onClick: () => setLanguage('en') },
+      'EN',
     ),
   );
 }
@@ -36,11 +36,9 @@ describe('localized language URLs', () => {
     window.history.replaceState({}, '', '/');
     document.head.innerHTML = `
       <meta name="description" content="" />
-      <link rel="canonical" href="https://viahelvetica.ch/" />
-      <meta property="og:locale" content="en_CH" />
-      <meta property="og:locale:alternate" content="fr_CH" />
-      <meta property="og:locale:alternate" content="de_CH" />
-      <meta property="og:locale:alternate" content="it_CH" />
+      <link rel="canonical" href="https://example.org/" />
+      <meta property="og:locale" content="es_ES" />
+      <meta property="og:locale:alternate" content="en_GB" />
       <meta property="og:title" content="" />
       <meta property="og:description" content="" />
       <meta property="og:url" content="" />
@@ -67,37 +65,38 @@ describe('localized language URLs', () => {
   });
 
   it('recognizes only supported root language segments', () => {
-    expect(languageFromPathname('/fr/')).toBe('fr');
-    expect(languageFromPathname('/de/?map=1')).toBe('de');
+    expect(languageFromPathname('/es/')).toBe('es');
+    expect(languageFromPathname('/en/?map=1')).toBe('en');
+    expect(languageFromPathname('/fr/')).toBeNull();
     expect(languageFromPathname('/benchmarks/routing/')).toBeNull();
     expect(languageFromPathname('/')).toBeNull();
   });
 
   it('gives the localized path priority over a stored preference', async () => {
-    window.localStorage.setItem('via-helvetica-language', 'en');
-    window.history.replaceState({}, '', '/fr/');
+    window.localStorage.setItem('via-augusta-language', 'en');
+    window.history.replaceState({}, '', '/es/');
 
     await act(async () => {
       root?.render(createElement(I18nProvider, null, createElement(LanguageProbe)));
     });
 
-    expect(container.querySelector('output')?.textContent).toBe('fr');
-    expect(document.documentElement.lang).toBe('fr');
-    expect(document.title).toContain('Planificateur');
+    expect(container.querySelector('output')?.textContent).toBe('es');
+    expect(document.documentElement.lang).toBe('es');
+    expect(document.title).toContain('Planificador');
     expect(
       JSON.parse(
         document.querySelector<HTMLScriptElement>('#structured-data')
           ?.textContent ?? '{}',
       ).inLanguage,
-    ).toBe('fr');
+    ).toBe('es');
     expect(
       document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href,
-    ).toBe('https://viahelvetica.ch/fr/');
+    ).toBe(`${window.location.origin}/es/`);
   });
 
   it('changes the path without navigation and preserves query and hash', async () => {
-    window.localStorage.setItem('via-helvetica-language', 'fr');
-    window.history.replaceState({}, '', '/fr/?map=1#route');
+    window.localStorage.setItem('via-augusta-language', 'es');
+    window.history.replaceState({}, '', '/es/?map=1#route');
     const pushState = vi.spyOn(window.history, 'pushState');
 
     await act(async () => {
@@ -109,30 +108,30 @@ describe('localized language URLs', () => {
     });
 
     expect(pushState).toHaveBeenCalledTimes(1);
-    expect(window.location.pathname).toBe('/de/');
+    expect(window.location.pathname).toBe('/en/');
     expect(window.location.search).toBe('?map=1');
     expect(window.location.hash).toBe('#route');
-    expect(container.querySelector('output')?.textContent).toBe('de');
-    expect(document.documentElement.lang).toBe('de');
+    expect(container.querySelector('output')?.textContent).toBe('en');
+    expect(document.documentElement.lang).toBe('en');
   });
 
   it('normalizes the x-default root to the resolved localized path', async () => {
-    window.localStorage.setItem('via-helvetica-language', 'fr');
+    window.localStorage.setItem('via-augusta-language', 'en');
     const replaceState = vi.spyOn(window.history, 'replaceState');
 
     await act(async () => {
       root?.render(createElement(I18nProvider, null, createElement(LanguageProbe)));
     });
 
-    expect(window.location.pathname).toBe('/fr/');
-    expect(container.querySelector('output')?.textContent).toBe('fr');
+    expect(window.location.pathname).toBe('/en/');
+    expect(container.querySelector('output')?.textContent).toBe('en');
     expect(replaceState).toHaveBeenCalledWith(
-      expect.objectContaining({ viaHelveticaLanguage: 'fr' }),
+      expect.objectContaining({ viaAugustaLanguage: 'en' }),
       '',
-      '/fr/',
+      '/en/',
     );
     expect(
       document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href,
-    ).toBe('https://viahelvetica.ch/fr/');
+    ).toBe(`${window.location.origin}/en/`);
   });
 });

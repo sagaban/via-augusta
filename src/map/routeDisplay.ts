@@ -64,7 +64,7 @@ const WAYPOINT_VISIBILITY_RESOLUTION_EPSILON = 1e-9;
  * Detailed views keep handles compact for precise editing, while broader views
  * progressively open gaps that can be reused by direction arrows.
  *
- * @param resolution - Current map resolution in LV95 metres per screen pixel.
+ * @param resolution - Current map resolution in map units per screen pixel.
  * @returns Minimum centre-to-centre handle separation in screen pixels.
  */
 function getVisibleWaypointSeparationPx(resolution: number): number {
@@ -87,7 +87,7 @@ function getVisibleWaypointSeparationPx(resolution: number): number {
  * anchors remain in route state and reappear automatically as the user zooms in.
  *
  * @param steps - Complete editable waypoint sequence.
- * @param resolution - Current map resolution in LV95 metres per screen pixel.
+ * @param resolution - Current map resolution in map units per screen pixel.
  * @param activeWaypointIndex - Optional waypoint that must stay visible during drag.
  * @returns Sorted route indexes whose handles should be rendered and hit-tested.
  */

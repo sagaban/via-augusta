@@ -15,7 +15,7 @@ import type { RouteState, RouteStep } from './routeState';
 /** Parameters controlling the density of generated editing anchors. */
 export interface ImportedRouteConversionOptions {
   /**
-   * Preferred distance in LV95 metres between editing anchors. Short routes
+   * Preferred distance in map units between editing anchors. Short routes
    * may use a smaller adaptive spacing so they still expose useful handles.
    */
   readonly targetSectionLengthMeters: number;
@@ -115,7 +115,7 @@ export class ImportedRouteSparseGeometryError extends Error {
   }
 }
 
-/** Returns planar LV95 distance between two coordinates in metres. */
+/** Returns planar map distance between two coordinates in metres. */
 function coordinateDistance(first: Coordinate, second: Coordinate): number {
   return Math.hypot(first[0] - second[0], first[1] - second[1]);
 }
@@ -202,7 +202,7 @@ function assertImportedSectionsAreNetworkEditable(steps: RouteStep[]): void {
  * waypoint is one source vertex. No snapping, simplification, or routing occurs
  * during conversion.
  *
- * @param coordinates - Continuous GPX geometry in EPSG:2056 with at least two points.
+ * @param coordinates - Continuous GPX geometry in EPSG:3857 with at least two points.
  * @param overrides - Optional anchor-density overrides for tests or future tuning.
  * @returns Editable route state whose sections are all marked as imported.
  * @throws {Error} If fewer than two coordinates are supplied or options are invalid.

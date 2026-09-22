@@ -258,7 +258,7 @@ export function calculateVisibleMapInformationAnchorPixel(
  * current zoom and the clicked geographic coordinate remain unchanged.
  *
  * @param map - Mounted OpenLayers map displaying the selected information.
- * @param coordinate - Exact coordinate clicked by the user in LV95.
+ * @param coordinate - Exact coordinate clicked by the user in the map projection.
  * @param popupElement - Rendered information panel whose bounds obscure the map.
  * @param placement - Minimal movement for stops or contextual focus for geometry.
  */

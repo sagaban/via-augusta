@@ -11,10 +11,6 @@ import MapLayersSelector from './MapLayersSelector';
 
 const layerOpacities: MapLayerOpacities = {
   hikingTrails: 0.8,
-  switzerlandMobilityHiking: 0.6,
-  trailClosures: 0.8,
-  shootingDangerZones: 0.6,
-  publicTransportStops: 1,
 };
 
 const defaultProps: ComponentProps<typeof MapLayersSelector> = {
@@ -22,14 +18,6 @@ const defaultProps: ComponentProps<typeof MapLayersSelector> = {
   onBaseMapChange: vi.fn(),
   areHikingTrailsVisible: true,
   onHikingTrailsChange: vi.fn(),
-  isSwitzerlandMobilityHikingVisible: false,
-  onSwitzerlandMobilityHikingChange: vi.fn(),
-  areTrailClosuresVisible: true,
-  onTrailClosuresChange: vi.fn(),
-  areShootingDangerZonesVisible: true,
-  onShootingDangerZonesChange: vi.fn(),
-  arePublicTransportStopsVisible: false,
-  onPublicTransportStopsChange: vi.fn(),
   layerOpacities,
   onLayerOpacityChange: vi.fn(),
   onOpen: vi.fn(),
@@ -56,8 +44,8 @@ describe('MapLayersSelector', () => {
 
   beforeEach(() => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    window.history.replaceState({}, '', '/fr/');
-    window.localStorage.setItem('via-helvetica-language', 'fr');
+    window.history.replaceState({}, '', '/es/');
+    window.localStorage.setItem('via-augusta-language', 'es');
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -75,7 +63,7 @@ describe('MapLayersSelector', () => {
     vi.restoreAllMocks();
   });
 
-  it('offers one bounded opacity control for every information layer', async () => {
+  it('offers one bounded opacity control for the hiking overlay', async () => {
     const onLayerOpacityChange = vi.fn();
 
     await act(async () => {
@@ -94,26 +82,12 @@ describe('MapLayersSelector', () => {
       '.map-layer-opacity-button',
     );
 
-    expect(opacityButtons).toHaveLength(5);
+    expect(opacityButtons).toHaveLength(1);
     expect(opacityButtons[0]?.getAttribute('aria-label')).toBe(
-      'Régler l’opacité de la couche « Chemins de randonnée »',
+      'Ajustar la opacidad de la capa «Senderos GR, PR y SL»',
     );
     expect(opacityButtons[0]?.hasAttribute('aria-controls')).toBe(false);
-    expect(Array.from(opacityButtons, (button) => button.disabled)).toEqual([
-      false,
-      true,
-      false,
-      false,
-      true,
-    ]);
-
-    await act(async () => {
-      opacityButtons[1]?.click();
-    });
-
-    expect(
-      container.querySelector('#map-layer-opacity-switzerlandMobilityHiking'),
-    ).toBeNull();
+    expect(opacityButtons[0]?.disabled).toBe(false);
 
     await act(async () => {
       opacityButtons[0]?.click();
@@ -137,7 +111,7 @@ describe('MapLayersSelector', () => {
     );
     expect(visibleValue?.getAttribute('aria-hidden')).toBe('true');
     expect(container.querySelector('output')).toBeNull();
-    expect(container.textContent).toContain('Opacité');
+    expect(container.textContent).toContain('Opacidad');
     expect(container.textContent).toContain('80 %');
 
     await act(async () => {
@@ -266,7 +240,7 @@ describe('MapLayersSelector', () => {
       layersButton?.click();
     });
 
-    expect(container.textContent).toContain('Carte et options');
+    expect(container.textContent).toContain('Mapa y opciones');
     expect(
       container.querySelector('.map-layers-section--base-maps'),
     ).not.toBeNull();
@@ -276,7 +250,7 @@ describe('MapLayersSelector', () => {
     );
 
     expect(closeButton?.getAttribute('aria-label')).toBe(
-      'Fermer le panneau Carte et options',
+      'Cerrar el panel Mapa y opciones',
     );
 
     await act(async () => {
@@ -304,11 +278,9 @@ describe('MapLayersSelector', () => {
       '.map-layers-language-option',
     );
 
-    expect(languageOptions).toHaveLength(4);
+    expect(languageOptions).toHaveLength(2);
     expect(Array.from(languageOptions, (option) => option.textContent)).toEqual([
-      'FR',
-      'DE',
-      'IT',
+      'ES',
       'EN',
     ]);
     expect(languageOptions[0]?.getAttribute('aria-checked')).toBe('true');
@@ -317,10 +289,10 @@ describe('MapLayersSelector', () => {
       languageOptions[1]?.click();
     });
 
-    expect(container.textContent).toContain('Karte und Optionen');
+    expect(container.textContent).toContain('Map and options');
     expect(
       container.querySelector<HTMLButtonElement>(
-        '.map-layers-language-option[aria-label="Deutsch"]',
+        '.map-layers-language-option[aria-label="English"]',
       )?.getAttribute('aria-checked'),
     ).toBe('true');
   });
@@ -344,7 +316,7 @@ describe('MapLayersSelector', () => {
       '.map-layers-about-action',
     );
 
-    expect(aboutAction?.textContent).toContain('À propos de Via Helvetica');
+    expect(aboutAction?.textContent).toContain('Acerca de Via Augusta');
 
     await act(async () => {
       aboutAction?.click();

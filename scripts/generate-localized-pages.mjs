@@ -11,8 +11,25 @@ const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
 );
-const SITE_ORIGIN = 'https://viahelvetica.ch';
-const APP_TEMPLATE_PATH = path.join(PROJECT_ROOT, 'index.html');
+/**
+ * Deployment base path (for example `/via-augusta/` on GitHub Pages without a
+ * custom domain) and public site URL including that path. Both come from the
+ * same build variables Vite uses, so generated links match the bundle.
+ */
+function withTrailingSlash(value) {
+  return value.endsWith('/') ? value : `${value}/`;
+}
+const BASE_PATH = withTrailingSlash(process.env.VITE_BASE_PATH || '/');
+const SITE_URL = withTrailingSlash(
+  process.env.VITE_SITE_URL || `http://localhost:5173${BASE_PATH}`,
+);
+const REPOSITORY_URL = process.env.VITE_REPOSITORY_URL || undefined;
+const APP_TEMPLATE_PATH = path.join(
+  PROJECT_ROOT,
+  'scripts',
+  'templates',
+  'app.html',
+);
 const RELEASE_TEMPLATE_PATH = path.join(
   PROJECT_ROOT,
   'scripts',
@@ -32,7 +49,8 @@ const RELEASE_HISTORY_PATH = path.join(
   'releaseHistory.json',
 );
 const PACKAGE_PATH = path.join(PROJECT_ROOT, 'package.json');
-const SUPPORTED_LANGUAGES = ['fr', 'de', 'it', 'en'];
+const SUPPORTED_LANGUAGES = ['es', 'en'];
+const DEFAULT_LANGUAGE = 'es';
 
 function escapeHtmlAttribute(value) {
   return String(value)
@@ -113,12 +131,12 @@ function replaceOpenGraphAlternates(html, activeLocale, metadata) {
 
 function structuredDataForApplication(language, metadata) {
   const entry = metadata[language];
-  const localizedUrl = `${SITE_ORIGIN}${entry.path}`;
+  const localizedUrl = `${SITE_URL}${entry.path}`;
 
   return {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
-    name: 'Via Helvetica',
+    name: 'Via Augusta',
     url: localizedUrl,
     description: entry.description,
     applicationCategory: 'TravelApplication',
@@ -128,20 +146,17 @@ function structuredDataForApplication(language, metadata) {
     inLanguage: language,
     image: {
       '@type': 'ImageObject',
-      url: `${SITE_ORIGIN}/via-helvetica-preview.jpg`,
+      url: `${SITE_URL}via-augusta-preview.jpg`,
       width: 1200,
       height: 630,
     },
-    codeRepository: 'https://github.com/egofree71/via-helvetica',
+    ...(REPOSITORY_URL ? { codeRepository: REPOSITORY_URL } : {}),
     license: 'https://opensource.org/license/mit/',
-    author: {
-      '@type': 'Person',
-      name: 'Philippe De Pol',
-    },
+    isBasedOn: 'https://github.com/egofree71/via-helvetica',
     offers: {
       '@type': 'Offer',
       price: '0',
-      priceCurrency: 'CHF',
+      priceCurrency: 'EUR',
     },
     featureList: entry.featureList,
   };
@@ -149,7 +164,7 @@ function structuredDataForApplication(language, metadata) {
 
 function localizeApplicationTemplate(template, language, metadata) {
   const entry = metadata[language];
-  const localizedUrl = `${SITE_ORIGIN}${entry.path}`;
+  const localizedUrl = `${SITE_URL}${entry.path}`;
   let html = template;
 
   html = replaceMarkedAttribute(html, 'html-language', 'lang', language);
@@ -165,6 +180,18 @@ function localizeApplicationTemplate(template, language, metadata) {
   );
   html = replaceMarkedAttribute(html, 'og-url', 'content', localizedUrl);
   html = replaceMarkedAttribute(html, 'image-alt', 'content', entry.imageAlt);
+  html = replaceMarkedAttribute(
+    html,
+    'og-image',
+    'content',
+    `${SITE_URL}via-augusta-preview.jpg`,
+  );
+  html = replaceMarkedAttribute(
+    html,
+    'twitter-image',
+    'content',
+    `${SITE_URL}via-augusta-preview.jpg`,
+  );
   html = replaceMarkedAttribute(html, 'twitter-title', 'content', entry.title);
   html = replaceMarkedAttribute(
     html,
@@ -195,8 +222,9 @@ function localizeApplicationTemplate(template, language, metadata) {
   return html;
 }
 
+/** Release page path relative to the base path. */
 function releasePagePath(language) {
-  return `/${language}/releases/`;
+  return `${language}/releases/`;
 }
 
 function replaceTemplateToken(template, token, value) {
@@ -213,9 +241,9 @@ function renderHreflangLinks() {
   return [
     ...SUPPORTED_LANGUAGES.map(
       (language) =>
-        `    <link rel="alternate" hreflang="${language}" href="${SITE_ORIGIN}${releasePagePath(language)}" />`,
+        `    <link rel="alternate" hreflang="${language}" href="${SITE_URL}${releasePagePath(language)}" />`,
     ),
-    `    <link rel="alternate" hreflang="x-default" href="${SITE_ORIGIN}/releases/" />`,
+    `    <link rel="alternate" hreflang="x-default" href="${SITE_URL}releases/" />`,
   ].join('\n');
 }
 
@@ -235,7 +263,7 @@ function renderLanguageLinks(activeLanguage) {
       ? ' aria-current="page"'
       : '';
 
-    return `          <a href="${releasePagePath(language)}" hreflang="${language}"${current}>${language.toUpperCase()}</a>`;
+    return `          <a href="${BASE_PATH}${releasePagePath(language)}" hreflang="${language}"${current}>${language.toUpperCase()}</a>`;
   }).join('\n');
 }
 
@@ -277,13 +305,13 @@ function structuredDataForReleasePage(language, localizedHistory) {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     name: localizedHistory.page.heading,
-    url: `${SITE_ORIGIN}${releasePagePath(language)}`,
+    url: `${SITE_URL}${releasePagePath(language)}`,
     description: localizedHistory.page.description,
     inLanguage: language,
     isPartOf: {
       '@type': 'WebSite',
-      name: 'Via Helvetica',
-      url: SITE_ORIGIN,
+      name: 'Via Augusta',
+      url: SITE_URL,
     },
   };
 }
@@ -298,7 +326,7 @@ function localizeReleaseTemplate(
   const localizedHistory = releaseHistory.locales[language];
   const pagePath = options.pagePath ?? releasePagePath(language);
   const canonicalPath = options.canonicalPath ?? pagePath;
-  const canonicalUrl = `${SITE_ORIGIN}${canonicalPath}`;
+  const canonicalUrl = `${SITE_URL}${canonicalPath}`;
   let html = template;
   const replacements = {
     LANGUAGE: escapeHtmlAttribute(language),
@@ -317,7 +345,8 @@ function localizeReleaseTemplate(
       .split('\n')
       .map((line) => `      ${line}`)
       .join('\n'),
-    APP_PATH: escapeHtmlAttribute(metadata[language].path),
+    APP_PATH: escapeHtmlAttribute(`${BASE_PATH}${metadata[language].path}`),
+    SITE_URL: escapeHtmlAttribute(SITE_URL),
     LANGUAGE_NAVIGATION: escapeHtmlAttribute(
       localizedHistory.page.languageNavigation,
     ),
@@ -488,7 +517,7 @@ for (const language of SUPPORTED_LANGUAGES) {
     throw new Error(`Missing SEO metadata for language: ${language}`);
   }
 
-  if (metadata[language].path !== `/${language}/`) {
+  if (metadata[language].path !== `${language}/`) {
     throw new Error(`Invalid localized path for language: ${language}`);
   }
 
@@ -518,19 +547,58 @@ for (const language of SUPPORTED_LANGUAGES) {
   );
 }
 
+// The root entry is the x-default page: it renders the default language and
+// the application then exposes the stable localized URL through the History API.
+await writeFile(
+  path.join(PROJECT_ROOT, 'index.html'),
+  localizeApplicationTemplate(appTemplate, DEFAULT_LANGUAGE, metadata),
+  'utf8',
+);
+
 const defaultReleaseOutputDirectory = path.join(PROJECT_ROOT, 'releases');
 await mkdir(defaultReleaseOutputDirectory, { recursive: true });
 await writeFile(
   path.join(defaultReleaseOutputDirectory, 'index.html'),
   localizeReleaseTemplate(
     releaseTemplate,
-    'en',
+    DEFAULT_LANGUAGE,
     metadata,
     releaseHistory,
     {
-      pagePath: '/releases/',
-      canonicalPath: '/en/releases/',
+      pagePath: 'releases/',
+      canonicalPath: `${DEFAULT_LANGUAGE}/releases/`,
     },
   ),
+  'utf8',
+);
+
+/** Search-engine files depend on the deployment URL, so they are generated too. */
+const PUBLIC_DIRECTORY = path.join(PROJECT_ROOT, 'public');
+const sitemapEntries = SUPPORTED_LANGUAGES.map(
+  (language) => `  <url>
+    <loc>${SITE_URL}${metadata[language].path}</loc>
+    <image:image>
+      <image:loc>${SITE_URL}via-augusta-preview.jpg</image:loc>
+    </image:image>
+  </url>
+  <url>
+    <loc>${SITE_URL}${releasePagePath(language)}</loc>
+  </url>`,
+).join('\n');
+await writeFile(
+  path.join(PUBLIC_DIRECTORY, 'sitemap.xml'),
+  `<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+>
+${sitemapEntries}
+</urlset>
+`,
+  'utf8',
+);
+await writeFile(
+  path.join(PUBLIC_DIRECTORY, 'robots.txt'),
+  `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}sitemap.xml\n`,
   'utf8',
 );

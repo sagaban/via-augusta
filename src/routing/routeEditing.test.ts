@@ -1,12 +1,12 @@
 /**
  * Business context: protects local route reshaping around moved, inserted, and
  * deleted waypoints. The editor must rebuild only affected sections, preserve
- * exact waypoints, and fall back to straight geometry when swissTLM3D routing
+ * exact waypoints, and fall back to straight geometry when BRouter routing
  * has no usable path.
  */
 import type { Coordinate } from 'ol/coordinate.js';
 import { describe, expect, it, vi } from 'vitest';
-import type { DynamicRoutingNetworkLoader } from './dynamicRoutingNetwork';
+import type { RoutingLoader } from './brouterRouting';
 import {
   connectRoutedSegmentEndpoint,
   createStraightRouteClosure,
@@ -25,7 +25,7 @@ function createRoutingLoader(options?: {
   snapCoordinate?: Coordinate | null;
   routedCoordinates?: Coordinate[] | null;
 }): {
-  loader: DynamicRoutingNetworkLoader;
+  loader: RoutingLoader;
   snap: ReturnType<typeof vi.fn>;
   route: ReturnType<typeof vi.fn>;
 } {
@@ -45,7 +45,7 @@ function createRoutingLoader(options?: {
   });
 
   return {
-    loader: { snap, route } as unknown as DynamicRoutingNetworkLoader,
+    loader: { snap, route } as unknown as RoutingLoader,
     snap,
     route,
   };
@@ -167,14 +167,14 @@ describe('routeEditing', () => {
     const { loader, route } = createRoutingLoader({
       routedCoordinates: [
         [0, 0],
-        [16_000, 0],
+        [30_000, 0],
       ],
     });
 
     await expect(
       requestNetworkRouteSection(
         [0, 0],
-        [16_000, 0],
+        [30_000, 0],
         loader,
         new AbortController().signal,
       ),
@@ -188,7 +188,7 @@ describe('routeEditing', () => {
     await expect(
       rebuildFixedRouteSection(
         [0, 0],
-        [16_000, 0],
+        [30_000, 0],
         'straight',
         loader,
         new AbortController().signal,
@@ -196,7 +196,7 @@ describe('routeEditing', () => {
     ).resolves.toEqual(
       generatedSection([
         [0, 0],
-        [16_000, 0],
+        [30_000, 0],
       ]),
     );
     expect(route).not.toHaveBeenCalled();
@@ -400,7 +400,7 @@ describe('routeEditing', () => {
       rebuildRouteAfterWaypointMove(
         state,
         1,
-        [16_000, 0],
+        [30_000, 0],
         'network',
         loader,
         new AbortController().signal,
@@ -421,10 +421,10 @@ describe('routeEditing', () => {
           ]),
         },
         {
-          waypoint: [16_000, 0],
+          waypoint: [30_000, 0],
           section: generatedSection([
             [10, 0],
-            [16_000, 0],
+            [30_000, 0],
           ]),
         },
       ],
@@ -457,10 +457,10 @@ describe('routeEditing', () => {
           ]),
         },
         {
-          waypoint: [16_000, 0],
+          waypoint: [30_000, 0],
           section: generatedSection([
             [10, 0],
-            [16_000, 0],
+            [30_000, 0],
           ]),
         },
       ],

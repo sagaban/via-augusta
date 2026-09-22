@@ -1,21 +1,20 @@
 /**
  * Business context: derives the compact planning statistics shown for the
- * current route. Distance is calculated immediately in the browser. Editable
- * routes use GeoAdmin's elevation service, while imported GPX files reuse their
+ * current route. Distance is calculated geodesically in the browser. Editable
+ * routes are resampled locally and their elevations requested from the
+ * Copernicus DEM through Open-Meteo, while imported GPX files reuse their
  * complete embedded elevations when possible. The ordered profile samples also
- * feed the Swiss hiking-time polynomial published by Schweizer Wanderwege.
+ * feed an estimate based on the MIDE hiking-time method used in Spain.
  */
 import type { Coordinate } from 'ol/coordinate.js';
 import LineString from 'ol/geom/LineString.js';
 import { getDistance, getLength } from 'ol/sphere.js';
+import { fetchElevations } from '../elevation/openMeteoElevation';
 import {
   MAP_PROJECTION_CODE,
   toWgs84Coordinates,
 } from '../map/projection';
 
-/** Official GeoAdmin endpoint returning elevations along an LV95 polyline. */
-const ELEVATION_PROFILE_ENDPOINT =
-  'https://api3.geo.admin.ch/rest/services/profile.json';
 /** Target spacing in metres between elevation samples along the route. */
 const PROFILE_SAMPLE_INTERVAL_METERS = 20;
 /** Minimum profile size required to calculate ascent and descent. */
@@ -27,50 +26,23 @@ const PROFILE_MIN_SAMPLE_POINTS = 2;
  */
 const PROFILE_MAX_SAMPLE_POINTS = 1_000;
 /**
- * Maximum amount of route vertices sent to GeoAdmin. The service accepts up to
- * roughly 5,000 coordinates; staying below that cap leaves room for future
- * endpoint changes and limits request-body size.
- */
-const PROFILE_MAX_INPUT_COORDINATES = 4_000;
-/**
- * Number of neighbouring samples on either side used by the service's moving
- * average. A small value reduces terrain noise without flattening genuine
- * climbs over normal hiking distances.
+ * Number of neighbouring samples on either side used by the local moving
+ * average. The 90 m DEM produces small steps between cells; smoothing prevents
+ * them from inflating ascent and descent without flattening genuine climbs.
  */
 const PROFILE_SMOOTHING_OFFSET = 2;
+/** MIDE reference horizontal walking speed in metres per hour. */
+const MIDE_HORIZONTAL_SPEED_METERS_PER_HOUR = 4_000;
+/** MIDE reference ascent rate in metres per hour. */
+const MIDE_ASCENT_METERS_PER_HOUR = 400;
+/** MIDE reference descent rate in metres per hour. */
+const MIDE_DESCENT_METERS_PER_HOUR = 600;
 /**
- * Coefficients of the 15th-degree Swiss hiking-time polynomial.
- *
- * Schweizer Wanderwege published these numeric parameters in
- * "Wanderzeitberechnung, Version 2020.2" dated 8 June 2020. The polynomial
- * returns minutes per kilometre for a slope expressed in percent. Keeping the
- * coefficients in ascending degree order makes the source table easy to audit;
- * evaluation below uses Horner's method for numerical stability.
+ * Horizontal length of the sections to which the MIDE combination rule is
+ * applied. MIDE is meant for homogeneous stretches rather than 20 m samples;
+ * about one kilometre keeps local climbs visible while avoiding sample noise.
  */
-const SWISS_HIKING_TIME_COEFFICIENTS = [
-  14.271,
-  0.36992,
-  0.025922,
-  -0.0014384,
-  0.000032105,
-  0.0000081542,
-  -9.0261e-8,
-  -2.0757e-8,
-  1.0192e-10,
-  2.8588e-11,
-  -5.7466e-14,
-  -2.1842e-14,
-  1.5176e-17,
-  8.6894e-18,
-  -1.3584e-21,
-  -1.4026e-21,
-] as const;
-/**
- * Published validity boundary of the polynomial. Clamping avoids extrapolating
- * the high-degree curve when a short sampled section exceeds a 40 percent
- * slope because of genuine terrain or residual elevation noise.
- */
-const SWISS_HIKING_TIME_MAX_SLOPE_PERCENT = 40;
+const MIDE_SECTION_LENGTH_METERS = 1_000;
 
 /** Availability state for altitude-dependent itinerary figures. */
 export type RouteElevationStatus = 'loading' | 'ready' | 'error';
@@ -95,7 +67,7 @@ export interface RouteElevationSummary {
 
 /** One imported GPX segment with a complete altitude for every map coordinate. */
 export interface ImportedRouteElevationSegment {
-  /** Ordered segment geometry in EPSG:2056. */
+  /** Ordered segment geometry in the map projection. */
   coordinates: Coordinate[];
   /** Embedded GPX elevations matching the coordinate array one-for-one. */
   elevationsMeters: number[];
@@ -107,62 +79,81 @@ interface ImportedElevationCursor {
   upperIndex: number;
 }
 
-/** Untrusted altitude container returned by the profile service. */
-interface ElevationProfileAltitudes {
-  /** Combined best-available terrain model value. */
-  COMB?: unknown;
-}
+/**
+ * Resamples a route at evenly spaced geodesic distances.
+ *
+ * @param lonLats - Ordered WGS 84 route vertices.
+ * @param sampleCount - Number of samples including both endpoints.
+ * @returns Sample positions and their cumulative distances in metres.
+ */
+export function resampleRouteGeodesically(
+  lonLats: Coordinate[],
+  sampleCount: number,
+): { positions: Coordinate[]; distancesMeters: number[] } {
+  const cumulativeDistances = [0];
 
-/** One untrusted elevation sample returned by GeoAdmin. */
-interface ElevationProfilePoint {
-  /** Available terrain-model altitudes for the sample. */
-  alts?: ElevationProfileAltitudes;
-  /** Cumulative distance from the start of the requested profile. */
-  dist?: unknown;
-}
-
-/** Returns a finite number from an external numeric value or numeric string. */
-function readFiniteNumber(value: unknown): number | null {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value;
+  for (let index = 1; index < lonLats.length; index += 1) {
+    cumulativeDistances.push(
+      cumulativeDistances[index - 1] +
+        getDistance(lonLats[index - 1], lonLats[index]),
+    );
   }
 
-  if (typeof value === 'string') {
-    const parsedValue = Number(value);
-    return Number.isFinite(parsedValue) ? parsedValue : null;
+  const totalDistance = cumulativeDistances[cumulativeDistances.length - 1];
+  const positions: Coordinate[] = [];
+  const distancesMeters: number[] = [];
+  let segmentIndex = 1;
+
+  for (let sample = 0; sample < sampleCount; sample += 1) {
+    const targetDistance = (totalDistance * sample) / (sampleCount - 1);
+
+    while (
+      segmentIndex < cumulativeDistances.length - 1 &&
+      cumulativeDistances[segmentIndex] < targetDistance
+    ) {
+      segmentIndex += 1;
+    }
+
+    const startDistance = cumulativeDistances[segmentIndex - 1];
+    const segmentLength = cumulativeDistances[segmentIndex] - startDistance;
+    const ratio =
+      segmentLength > 0
+        ? Math.min(1, Math.max(0, (targetDistance - startDistance) / segmentLength))
+        : 0;
+    const start = lonLats[segmentIndex - 1];
+    const end = lonLats[segmentIndex];
+
+    positions.push([
+      start[0] + (end[0] - start[0]) * ratio,
+      start[1] + (end[1] - start[1]) * ratio,
+    ]);
+    distancesMeters.push(targetDistance);
   }
 
-  return null;
-}
-
-/** Copies one native LV95 map coordinate for the profile-service payload. */
-function mapCoordinateToLv95(coordinate: Coordinate): Coordinate {
-  return [coordinate[0], coordinate[1]];
+  return { positions, distancesMeters };
 }
 
 /**
- * Reduces very dense route geometry while preserving the first and last point.
- *
- * The elevation service resamples the complete polyline itself, so uniformly
- * retaining up to 4,000 source vertices is sufficient for height lookup while
- * preventing oversized request bodies on unusually detailed routes.
+ * Applies a centred moving average while keeping both profile endpoints exact.
+ * @param values - Raw elevation samples.
+ * @param offset - Neighbours used on each side.
  */
-function limitProfileCoordinates(coordinates: Coordinate[]): Coordinate[] {
-  if (coordinates.length <= PROFILE_MAX_INPUT_COORDINATES) {
-    return coordinates;
-  }
+export function smoothElevations(values: number[], offset: number): number[] {
+  return values.map((value, index) => {
+    if (index === 0 || index === values.length - 1) {
+      return value;
+    }
 
-  const limitedCoordinates: Coordinate[] = [];
-  const lastIndex = coordinates.length - 1;
+    const start = Math.max(0, index - offset);
+    const end = Math.min(values.length - 1, index + offset);
+    let total = 0;
 
-  for (let index = 0; index < PROFILE_MAX_INPUT_COORDINATES; index += 1) {
-    const sourceIndex = Math.round(
-      (index * lastIndex) / (PROFILE_MAX_INPUT_COORDINATES - 1),
-    );
-    limitedCoordinates.push(coordinates[sourceIndex]);
-  }
+    for (let cursor = start; cursor <= end; cursor += 1) {
+      total += values[cursor];
+    }
 
-  return limitedCoordinates;
+    return total / (end - start + 1);
+  });
 }
 
 /** Calculates the ideal amount of elevation samples before applying a budget. */
@@ -183,7 +174,7 @@ function profileSampleCount(distanceMeters: number): number {
 
 /** Measurable route segment paired with its geodesic length and sample budget. */
 interface MeasurableProfileSegment {
-  /** Independent route geometry in EPSG:2056. */
+  /** Independent route geometry in the map projection. */
   segment: Coordinate[];
   /** Geodesic segment length in metres. */
   distanceMeters: number;
@@ -198,7 +189,7 @@ interface MeasurableProfileSegment {
  * are distributed in proportion to the density each segment would request on
  * its own, while largest fractional remainders consume the final rounding slots.
  *
- * @param segments - Independent route geometries in EPSG:2056.
+ * @param segments - Independent route geometries in the map projection.
  * @returns Measurable segments with a combined sample count no greater than 1,000.
  * @throws {Error} When more independent segments exist than the budget can represent.
  */
@@ -289,8 +280,8 @@ function allocateSegmentProfileSamples(
 }
 
 /**
- * Calculates geodesic route length from the displayed native LV95 geometry.
- * @param coordinates - Ordered route vertices in EPSG:2056.
+ * Calculates geodesic route length from the displayed map geometry.
+ * @param coordinates - Ordered route vertices in the map projection.
  * @returns Horizontal distance in metres, or zero for fewer than two points.
  */
 export function calculateRouteDistance(coordinates: Coordinate[]): number {
@@ -384,7 +375,7 @@ function importedElevationAtDistance(
  *
  * GPX track points are often distributed irregularly because they preserve map
  * bends as well as profile samples. Resampling the embedded altitude function at
- * the same roughly 20 metre interval used by GeoAdmin prevents dense bends from
+ * a roughly 20 metre interval prevents dense bends from
  * producing a visibly jagged chart while retaining the file's own elevations.
  * Deliberate gaps remain independent for distance and elevation accumulation.
  *
@@ -464,7 +455,7 @@ export function createImportedRouteElevationSummary(
  * Retrieves elevation profiles for independent GPX segments and combines their
  * totals without adding ascent, descent, or distance across deliberate gaps.
  *
- * @param segments - Independent itinerary lines in EPSG:2056.
+ * @param segments - Independent itinerary lines in the map projection.
  * @param signal - Abort signal used when another GPX or route replaces the request.
  * @returns Combined ascent, descent, and cumulative samples without gap connectors.
  * @throws {Error} If no usable segment profile can be retrieved or validated.
@@ -508,7 +499,7 @@ export async function fetchRouteSegmentsElevationSummary(
 /**
  * Retrieves and accumulates smoothed elevations along the current route.
  *
- * @param coordinates - Ordered route vertices in EPSG:2056.
+ * @param coordinates - Ordered route vertices in the map projection.
  * @param distanceMeters - Already calculated route distance used to size the profile.
  * @param signal - Abort signal used when route history changes before completion.
  * @param requestedSampleCount - Optional share of a multi-segment global budget.
@@ -533,68 +524,20 @@ export async function fetchRouteElevationSummary(
     throw new Error('Elevation profile sample count is outside safe limits.');
   }
 
-  const profileCoordinates = limitProfileCoordinates(coordinates).map(
-    mapCoordinateToLv95,
+  const { positions, distancesMeters } = resampleRouteGeodesically(
+    toWgs84Coordinates(coordinates),
+    requestedSampleCount,
   );
-  const geometry = {
-    type: 'LineString',
-    coordinates: profileCoordinates.map(([easting, northing]) => [
-      Number(easting.toFixed(2)),
-      Number(northing.toFixed(2)),
-    ]),
-  };
-  const requestUrl = new URL(ELEVATION_PROFILE_ENDPOINT);
-  requestUrl.searchParams.set('sr', '2056');
-  requestUrl.searchParams.set(
-    'nb_points',
-    String(requestedSampleCount),
+  const elevations = smoothElevations(
+    await fetchElevations(positions, signal),
+    PROFILE_SMOOTHING_OFFSET,
   );
-  requestUrl.searchParams.set('offset', String(PROFILE_SMOOTHING_OFFSET));
-
-  /*
-   * GeoAdmin accepts the GeoJSON LineString directly as the POST body. Keeping
-   * numeric options in the query avoids wrapping the geometry in a provider-
-   * specific payload and mirrors the service's documented parameter contract.
-   */
-  const response = await fetch(requestUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(geometry),
-    signal,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Elevation profile request failed with ${response.status}.`);
-  }
-
-  const payload: unknown = await response.json();
-
-  if (!Array.isArray(payload)) {
-    throw new Error('Elevation profile response is not an array.');
-  }
-
-  const points = payload
-    .map((point): RouteElevationPoint | null => {
-      if (!point || typeof point !== 'object') {
-        return null;
-      }
-
-      const profilePoint = point as ElevationProfilePoint;
-      const elevationMeters = readFiniteNumber(profilePoint.alts?.COMB);
-      const distanceMeters = readFiniteNumber(profilePoint.dist);
-
-      if (elevationMeters === null || distanceMeters === null) {
-        return null;
-      }
-
-      return {
-        distanceMeters,
-        elevationMeters,
-      };
-    })
-    .filter((point): point is RouteElevationPoint => point !== null);
+  const points: RouteElevationPoint[] = elevations.map(
+    (elevationMeters, index) => ({
+      distanceMeters: distancesMeters[index],
+      elevationMeters,
+    }),
+  );
 
   if (points.length < PROFILE_MIN_SAMPLE_POINTS) {
     throw new Error('Elevation profile contains too few valid samples.');
@@ -621,30 +564,37 @@ export async function fetchRouteElevationSummary(
   };
 }
 
-/** Evaluates the Swiss minutes-per-kilometre polynomial at one slope. */
-function hikingMinutesPerKilometre(slopePercent: number): number {
-  let minutesPerKilometre = 0;
+/**
+ * Combines horizontal and vertical walking times with the MIDE rule: the
+ * larger of both plus half of the smaller.
+ * @returns Section time in minutes.
+ */
+function combineMideTimes(
+  horizontalMeters: number,
+  ascentMeters: number,
+  descentMeters: number,
+): number {
+  const horizontalHours =
+    horizontalMeters / MIDE_HORIZONTAL_SPEED_METERS_PER_HOUR;
+  const verticalHours =
+    ascentMeters / MIDE_ASCENT_METERS_PER_HOUR +
+    descentMeters / MIDE_DESCENT_METERS_PER_HOUR;
 
-  for (
-    let index = SWISS_HIKING_TIME_COEFFICIENTS.length - 1;
-    index >= 0;
-    index -= 1
-  ) {
-    minutesPerKilometre =
-      minutesPerKilometre * slopePercent +
-      SWISS_HIKING_TIME_COEFFICIENTS[index];
-  }
-
-  return minutesPerKilometre;
+  return (
+    (Math.max(horizontalHours, verticalHours) +
+      Math.min(horizontalHours, verticalHours) / 2) *
+    60
+  );
 }
 
 /**
- * Applies the Schweizer Wanderwege hiking-time model section by section.
+ * Estimates walking time with the MIDE method (Método de Información de
+ * Excursiones): 4 km/h horizontally, 400 m/h up, and 600 m/h down, combined
+ * per section as the larger time plus half of the smaller one.
  *
- * Using each pair of ordered elevation samples preserves the model's important
- * non-linear behaviour: moderate descents can be as fast as level walking,
- * while steep ascents and descents take progressively longer. Repeated profile
- * distances mark gaps between independent GPX segments and are ignored.
+ * The profile is split into sections of about one kilometre so the rule is
+ * applied to meaningful stretches instead of individual samples. Repeated
+ * profile distances mark gaps between independent GPX segments and are ignored.
  *
  * @param points - Ordered cumulative-distance and elevation profile samples.
  * @returns Estimated walking time in minutes, excluding breaks.
@@ -653,6 +603,9 @@ export function estimateHikingDuration(
   points: RouteElevationPoint[],
 ): number {
   let durationMinutes = 0;
+  let sectionHorizontalMeters = 0;
+  let sectionAscentMeters = 0;
+  let sectionDescentMeters = 0;
 
   for (let index = 1; index < points.length; index += 1) {
     const previousPoint = points[index - 1];
@@ -669,17 +622,33 @@ export function estimateHikingDuration(
 
     const elevationDifferenceMeters =
       currentPoint.elevationMeters - previousPoint.elevationMeters;
-    const rawSlopePercent =
-      (100 * elevationDifferenceMeters) / horizontalDistanceMeters;
-    const slopePercent = Math.min(
-      SWISS_HIKING_TIME_MAX_SLOPE_PERCENT,
-      Math.max(-SWISS_HIKING_TIME_MAX_SLOPE_PERCENT, rawSlopePercent),
-    );
 
-    durationMinutes +=
-      (horizontalDistanceMeters / 1_000) *
-      hikingMinutesPerKilometre(slopePercent);
+    sectionHorizontalMeters += horizontalDistanceMeters;
+
+    if (elevationDifferenceMeters > 0) {
+      sectionAscentMeters += elevationDifferenceMeters;
+    } else {
+      sectionDescentMeters -= elevationDifferenceMeters;
+    }
+
+    if (sectionHorizontalMeters >= MIDE_SECTION_LENGTH_METERS) {
+      durationMinutes += combineMideTimes(
+        sectionHorizontalMeters,
+        sectionAscentMeters,
+        sectionDescentMeters,
+      );
+      sectionHorizontalMeters = 0;
+      sectionAscentMeters = 0;
+      sectionDescentMeters = 0;
+    }
   }
 
-  return durationMinutes;
+  return (
+    durationMinutes +
+    combineMideTimes(
+      sectionHorizontalMeters,
+      sectionAscentMeters,
+      sectionDescentMeters,
+    )
+  );
 }

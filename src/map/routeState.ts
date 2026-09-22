@@ -23,13 +23,13 @@ export type RouteSection =
       readonly origin: 'generated';
       /** Calculation mode that produced the stored geometry. */
       readonly mode: RouteMode;
-      /** Exact displayed section geometry in LV95 coordinates. */
+      /** Exact displayed section geometry in the map projection coordinates. */
       readonly coordinates: Coordinate[];
     }
   | {
       /** The section is an untouched slice of an imported GPX geometry. */
       readonly origin: 'imported';
-      /** Exact imported section geometry in LV95 coordinates. */
+      /** Exact imported section geometry in the map projection coordinates. */
       readonly coordinates: Coordinate[];
     };
 
@@ -64,7 +64,7 @@ export interface RouteHistory extends RouteState {
 }
 
 /**
- * Squared distance in LV95 square metres below which consecutive generated
+ * Squared distance in the map projection square metres below which consecutive generated
  * vertices are treated as duplicates. Imported geometry deliberately bypasses
  * this tolerance so dense GPX samples remain lossless.
  */
@@ -101,7 +101,7 @@ export function routeStateMatches(
 }
 
 /**
- * Returns squared horizontal distance in LV95 square metres.
+ * Returns squared horizontal distance in the map projection square metres.
  * @param first - First coordinate.
  * @param second - Second coordinate.
  * @returns Squared XY distance without calculating a square root.

@@ -13,26 +13,14 @@ import {
 } from 'react';
 import {
   DEFAULT_HIKING_TRAILS_OPACITY,
-  DEFAULT_PUBLIC_TRANSPORT_STOPS_OPACITY,
-  DEFAULT_SHOOTING_DANGER_ZONES_OPACITY,
-  DEFAULT_SWITZERLAND_MOBILITY_HIKING_OPACITY,
-  DEFAULT_TRAIL_CLOSURES_OPACITY,
   MINIMUM_MAP_LAYER_OPACITY,
 } from './config';
 import type { MapRuntime } from './mapRuntime';
 
 /** Opacity ratios used by the optional information layers. */
 export interface MapLayerOpacities {
-  /** Ordinary official hiking-trail portrayal, from the product minimum to 1. */
+  /** Hiking-route overlay, from the product minimum to 1. */
   hikingTrails: number;
-  /** Green SwitzerlandMobility hiking portrayal, from the product minimum to 1. */
-  switzerlandMobilityHiking: number;
-  /** Official closure and detour portrayal, from the product minimum to 1. */
-  trailClosures: number;
-  /** Military shooting and danger-zone portrayal, from the product minimum to 1. */
-  shootingDangerZones: number;
-  /** Passenger public-transport stop symbols, from the product minimum to 1. */
-  publicTransportStops: number;
 }
 
 /** One information layer whose opacity can be changed by the shared menu. */
@@ -41,20 +29,11 @@ export type MapLayerOpacityKey = keyof MapLayerOpacities;
 /** Product defaults used until the visitor saves an explicit preference. */
 export const DEFAULT_MAP_LAYER_OPACITIES: Readonly<MapLayerOpacities> = {
   hikingTrails: DEFAULT_HIKING_TRAILS_OPACITY,
-  switzerlandMobilityHiking:
-    DEFAULT_SWITZERLAND_MOBILITY_HIKING_OPACITY,
-  trailClosures: DEFAULT_TRAIL_CLOSURES_OPACITY,
-  shootingDangerZones: DEFAULT_SHOOTING_DANGER_ZONES_OPACITY,
-  publicTransportStops: DEFAULT_PUBLIC_TRANSPORT_STOPS_OPACITY,
 };
 
 /** Layers with an opacity control, in stable traversal order. */
 const MAP_LAYER_OPACITY_KEYS = [
   'hikingTrails',
-  'switzerlandMobilityHiking',
-  'trailClosures',
-  'shootingDangerZones',
-  'publicTransportStops',
 ] as const satisfies readonly MapLayerOpacityKey[];
 
 /** Browser preference key dedicated to each independently adjustable layer. */
@@ -62,14 +41,7 @@ const MAP_LAYER_OPACITY_STORAGE_KEYS: Record<
   MapLayerOpacityKey,
   string
 > = {
-  hikingTrails: 'via-helvetica.hiking-trails-opacity',
-  switzerlandMobilityHiking:
-    'via-helvetica.switzerland-mobility-hiking-opacity',
-  trailClosures: 'via-helvetica.trail-closures-opacity',
-  shootingDangerZones:
-    'via-helvetica.shooting-danger-zones-opacity',
-  publicTransportStops:
-    'via-helvetica.public-transport-stops-opacity',
+  hikingTrails: 'via-augusta.hiking-trails-opacity',
 };
 
 /** Focused imperative setter for each optional OpenLayers portrayal. */
@@ -79,14 +51,6 @@ const MAP_LAYER_OPACITY_APPLIERS: Record<
 > = {
   hikingTrails: (runtime, opacity) =>
     runtime.setHikingTrailsOpacity(opacity),
-  switzerlandMobilityHiking: (runtime, opacity) =>
-    runtime.setSwitzerlandMobilityHikingOpacity(opacity),
-  trailClosures: (runtime, opacity) =>
-    runtime.setTrailClosuresOpacity(opacity),
-  shootingDangerZones: (runtime, opacity) =>
-    runtime.setShootingDangerZonesOpacity(opacity),
-  publicTransportStops: (runtime, opacity) =>
-    runtime.setPublicTransportStopsOpacity(opacity),
 };
 
 /** Inputs required by the shared information-layer opacity capability. */
@@ -163,22 +127,6 @@ export function resolveInitialMapLayerOpacities(): MapLayerOpacities {
       'hikingTrails',
       DEFAULT_MAP_LAYER_OPACITIES.hikingTrails,
     ),
-    switzerlandMobilityHiking: readStoredOpacity(
-      'switzerlandMobilityHiking',
-      DEFAULT_MAP_LAYER_OPACITIES.switzerlandMobilityHiking,
-    ),
-    trailClosures: readStoredOpacity(
-      'trailClosures',
-      DEFAULT_MAP_LAYER_OPACITIES.trailClosures,
-    ),
-    shootingDangerZones: readStoredOpacity(
-      'shootingDangerZones',
-      DEFAULT_MAP_LAYER_OPACITIES.shootingDangerZones,
-    ),
-    publicTransportStops: readStoredOpacity(
-      'publicTransportStops',
-      DEFAULT_MAP_LAYER_OPACITIES.publicTransportStops,
-    ),
   };
 }
 
@@ -218,7 +166,7 @@ export function useMapLayerOpacities(
   );
   const currentOpacitiesRef = useRef(options.initialOpacities);
   // The runtime is constructed with this same snapshot, so treating it as
-  // already applied avoids five redundant OpenLayers mutations at startup.
+  // already applied avoids redundant OpenLayers mutations at startup.
   const appliedOpacitiesRef = useRef(options.initialOpacities);
 
   const setLayerOpacity = useCallback(

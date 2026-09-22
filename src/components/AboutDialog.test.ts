@@ -17,8 +17,8 @@ describe('AboutDialog', () => {
 
   beforeEach(() => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    window.localStorage.setItem('via-helvetica-language', 'fr');
-    window.history.replaceState({}, '', '/fr/');
+    window.localStorage.setItem('via-augusta-language', 'es');
+    window.history.replaceState({}, '', '/es/');
 
     originalShowModal = Object.getOwnPropertyDescriptor(
       HTMLDialogElement.prototype,
@@ -102,22 +102,20 @@ describe('AboutDialog', () => {
     );
     expect(container.querySelector('.about-dialog-footer')).toBeNull();
     expect(container.querySelectorAll('.about-dialog button')).toHaveLength(1);
-    expect(container.textContent).toContain('1.7.2');
+    expect(container.textContent).toContain('0.1.0');
     expect(container.textContent).toContain(
-      'Via Helvetica est conçue principalement pour préparer un itinéraire sur un grand écran',
+      'Via Augusta está pensada sobre todo para preparar una ruta en una pantalla grande',
     );
     expect(container.textContent).toContain(
-      'Elle n’est pas destinée au suivi d’un itinéraire ni à la navigation en temps réel sur le terrain',
+      'Las rutas no se guardan en ningún servidor de Via Augusta',
     );
-    expect(container.textContent).toContain(
-      'le fichier GPX est hébergé pendant 24 heures, sans être associé à votre identité',
-    );
+    expect(container.textContent).toContain('Via Helvetica (Philippe De Pol)');
 
     const closeButton = container.querySelector<HTMLButtonElement>(
       '.about-dialog-icon-close',
     );
 
-    expect(closeButton?.getAttribute('aria-label')).toBe('Fermer');
+    expect(closeButton?.getAttribute('aria-label')).toBe('Cerrar');
     expect(closeButton?.textContent).toBe('×');
 
     await act(async () => {
@@ -129,29 +127,19 @@ describe('AboutDialog', () => {
 
   it.each([
     {
-      language: 'fr',
+      language: 'es',
       expected:
-        'Via Helvetica est conçue principalement pour préparer un itinéraire sur un grand écran',
-    },
-    {
-      language: 'de',
-      expected:
-        'Via Helvetica ist in erster Linie für die Planung einer Route auf einem grossen Bildschirm konzipiert',
-    },
-    {
-      language: 'it',
-      expected:
-        'Via Helvetica è pensata principalmente per preparare un itinerario su uno schermo grande',
+        'Via Augusta está pensada sobre todo para preparar una ruta en una pantalla grande',
     },
     {
       language: 'en',
       expected:
-        'Via Helvetica is designed primarily for planning a route on a large screen',
+        'Via Augusta is designed primarily for planning a route on a large screen',
     },
   ])(
     'localizes the intended-use guidance in $language',
     async ({ language, expected }) => {
-      window.localStorage.setItem('via-helvetica-language', language);
+      window.localStorage.setItem('via-augusta-language', language);
       window.history.replaceState({}, '', `/${language}/`);
 
       await act(async () => {
@@ -173,49 +161,33 @@ describe('AboutDialog', () => {
 
   it.each([
     {
-      language: 'fr',
+      language: 'es',
       expected: [
-        'La Suisse à pied',
-        '© OFROU, SuisseMobile, Suisse Rando, cantons',
-        '© OFROU, cantons, Suisse Rando, SuisseMobile',
-        '© Armée suisse',
-        '© OFT',
-      ],
-    },
-    {
-      language: 'de',
-      expected: [
-        'Wanderland',
-        '© ASTRA, SchweizMobil, Schweizer Wanderwege, Kantone',
-        '© ASTRA, Kantone, Schweizer Wanderwege, SchweizMobil',
-        '© Schweizer Armee',
-        '© BAV',
-      ],
-    },
-    {
-      language: 'it',
-      expected: [
-        'La Svizzera a piedi',
-        '© USTRA, SvizzeraMobile, Sentieri Svizzeri, cantoni',
-        '© USTRA, cantoni, Sentieri Svizzeri, SvizzeraMobile',
-        '© Esercito svizzero',
-        '© UFT',
+        'Mapas y ortofotos',
+        'CC BY 4.0 scne.es · IGN',
+        '© Waymarked Trails',
+        '© OpenStreetMap',
+        'BRouter',
+        'Photon',
+        'Copernicus DEM GLO-90',
+        'método MIDE',
       ],
     },
     {
       language: 'en',
       expected: [
-        'Hiking in Switzerland',
-        '© FEDRO, SwitzerlandMobility, Swiss Hiking Trail Federation, cantons',
-        '© FEDRO, cantons, Swiss Hiking Trail Federation, SwitzerlandMobility',
-        '© Swiss Armed Forces',
-        '© FOT',
+        'Maps and orthophotos',
+        'CC BY 4.0 scne.es · IGN',
+        '© Waymarked Trails',
+        'BRouter',
+        'Open-Meteo',
+        'MIDE method',
       ],
     },
   ])(
     'localizes map and data credits in $language',
     async ({ language, expected }) => {
-      window.localStorage.setItem('via-helvetica-language', language);
+      window.localStorage.setItem('via-augusta-language', language);
       window.history.replaceState({}, '', `/${language}/`);
 
       await act(async () => {

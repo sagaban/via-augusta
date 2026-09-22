@@ -27,10 +27,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -41,25 +41,24 @@ jobs:
       - name: Run regression tests
         run: npm test
 
-      - name: Check published public-transport stop catalog
-        if: vars.VITE_PUBLIC_TRANSPORT_STOPS_CATALOG_URL != ''
-        run: curl -fsS --compressed -o /dev/null "${{ vars.VITE_PUBLIC_TRANSPORT_STOPS_CATALOG_URL }}"
+      # Provides the Pages URL and base path: "/<repo>" for a project site,
+      # empty for a custom domain or a user/organization site.
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
 
       - name: Build application
         run: npm run build
         env:
-          VITE_ROUTING_DATA_BASE_URL: ${{ vars.VITE_ROUTING_DATA_BASE_URL }}
-          VITE_SWISSTOPO_SHARE_SERVICE_URL: ${{ vars.VITE_SWISSTOPO_SHARE_SERVICE_URL }}
-          VITE_PUBLIC_TRANSPORT_STOPS_CATALOG_URL: ${{ vars.VITE_PUBLIC_TRANSPORT_STOPS_CATALOG_URL }}
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v6
+          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}/
+          VITE_SITE_URL: ${{ steps.pages.outputs.base_url }}/
+          VITE_REPOSITORY_URL: ${{ github.server_url }}/${{ github.repository }}
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@v4

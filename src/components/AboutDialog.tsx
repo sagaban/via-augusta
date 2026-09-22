@@ -6,6 +6,7 @@
  */
 import { useLayoutEffect, useRef } from 'react';
 import { useI18n } from '../i18n/I18nContext';
+import { REPOSITORY_URL, UPSTREAM_PROJECT } from '../site';
 import {
   CURRENT_RELEASE_VERSION,
   releaseHistoryPath,
@@ -19,22 +20,26 @@ interface AboutDialogProps {
   onClose: () => void;
 }
 
-/** Public project links kept together so visible labels remain fully localized. */
-const PROJECT_LINKS = {
-  email: 'mailto:contact@viahelvetica.ch',
-  source: 'https://github.com/egofree71/via-helvetica',
-  license: 'https://github.com/egofree71/via-helvetica/blob/main/LICENSE',
-  // Replace this placeholder with the creator's final public profile before release.
-  linkedin: 'https://www.linkedin.com/in/philippe-de-pol/',
-  swisstopo: 'https://www.swisstopo.admin.ch/',
-  bav: {
-    fr: 'https://www.bav.admin.ch/fr',
-    de: 'https://www.bav.admin.ch/de',
-    it: 'https://www.bav.admin.ch/it',
-    en: 'https://www.bav.admin.ch/en',
-  },
-  transportOpenData: 'https://transport.opendata.ch/',
+/** External credit links kept together so visible labels remain fully localized. */
+const CREDIT_LINKS = {
+  ign: 'https://www.ign.es/',
+  osm: 'https://www.openstreetmap.org/copyright',
+  waymarkedTrails: 'https://hiking.waymarkedtrails.org/',
+  brouter: 'https://brouter.de/',
+  photon: 'https://photon.komoot.io/',
+  openMeteo: 'https://open-meteo.com/',
+  copernicus: 'https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model',
+  mide: 'https://www.montanasegura.com/mide/',
 } as const;
+
+/** One external credit rendered as a link. */
+function CreditLink({ href, children }: { href: string; children: string }) {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer">
+      {children}
+    </a>
+  );
+}
 
 /** Renders the localized About dialog above the otherwise map-centred interface. */
 export default function AboutDialog({
@@ -124,49 +129,27 @@ export default function AboutDialog({
             <h3>{t('about.projectTitle')}</h3>
             <dl className="about-dialog-details">
               <div>
-                <dt>{t('about.createdBy')}</dt>
-                <dd>Philippe De Pol</dd>
-              </div>
-              <div>
-                <dt>{t('about.support')}</dt>
+                <dt>{t('about.basedOn')}</dt>
                 <dd>
-                  <a href={PROJECT_LINKS.email}>contact@viahelvetica.ch</a>
+                  <CreditLink href={UPSTREAM_PROJECT.url}>
+                    {`${UPSTREAM_PROJECT.name} (${UPSTREAM_PROJECT.author})`}
+                  </CreditLink>
                 </dd>
               </div>
-              <div>
-                <dt>{t('about.sourceCode')}</dt>
-                <dd>
-                  <a
-                    href={PROJECT_LINKS.source}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    GitHub
-                  </a>
-                </dd>
-              </div>
+              {REPOSITORY_URL && (
+                <div>
+                  <dt>{t('about.sourceCode')}</dt>
+                  <dd>
+                    <CreditLink href={REPOSITORY_URL}>GitHub</CreditLink>
+                  </dd>
+                </div>
+              )}
               <div>
                 <dt>{t('about.license')}</dt>
                 <dd>
-                  <a
-                    href={PROJECT_LINKS.license}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <CreditLink href="https://opensource.org/license/mit/">
                     MIT
-                  </a>
-                </dd>
-              </div>
-              <div>
-                <dt>{t('about.linkedin')}</dt>
-                <dd>
-                  <a
-                    href={PROJECT_LINKS.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    LinkedIn
-                  </a>
+                  </CreditLink>
                 </dd>
               </div>
               <div>
@@ -176,11 +159,7 @@ export default function AboutDialog({
               <div>
                 <dt>{t('about.releaseHistory')}</dt>
                 <dd>
-                  <a
-                    href={releaseHistoryPath(language)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <a href={releaseHistoryPath(language)}>
                     {t('about.releaseHistoryAction')}
                   </a>
                 </dd>
@@ -194,59 +173,61 @@ export default function AboutDialog({
               <div>
                 <dt>{t('about.maps')}</dt>
                 <dd>
-                  <a
-                    href={PROJECT_LINKS.swisstopo}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    © swisstopo
-                  </a>
+                  <CreditLink href={CREDIT_LINKS.ign}>
+                    CC BY 4.0 scne.es · IGN
+                  </CreditLink>
                 </dd>
               </div>
               <div>
-                <dt>{t('about.switzerlandMobilityHiking')}</dt>
+                <dt>{t('about.hikingRoutes')}</dt>
                 <dd>
-                  © {t('about.creditFederalRoadsOffice')},{' '}
-                  {t('about.creditSwitzerlandMobility')},{' '}
-                  {t('about.creditHikingFederation')},{' '}
-                  {t('about.creditCantons')}
+                  <CreditLink href={CREDIT_LINKS.waymarkedTrails}>
+                    © Waymarked Trails
+                  </CreditLink>
+                  {', '}
+                  <CreditLink href={CREDIT_LINKS.osm}>
+                    © OpenStreetMap
+                  </CreditLink>
                 </dd>
               </div>
               <div>
-                <dt>{t('about.closures')}</dt>
+                <dt>{t('about.routing')}</dt>
                 <dd>
-                  © {t('about.creditFederalRoadsOffice')},{' '}
-                  {t('about.creditCantons')},{' '}
-                  {t('about.creditHikingFederation')},{' '}
-                  {t('about.creditSwitzerlandMobility')}
+                  <CreditLink href={CREDIT_LINKS.brouter}>BRouter</CreditLink>
+                  {', '}
+                  <CreditLink href={CREDIT_LINKS.osm}>
+                    © OpenStreetMap
+                  </CreditLink>
                 </dd>
               </div>
               <div>
-                <dt>{t('about.dangerZones')}</dt>
-                <dd>© {t('about.creditSwissArmy')}</dd>
-              </div>
-              <div>
-                <dt>{t('about.transportStops')}</dt>
+                <dt>{t('about.search')}</dt>
                 <dd>
-                  <a
-                    href={PROJECT_LINKS.bav[language]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    © {t('about.creditFederalTransportOffice')}
-                  </a>
+                  <CreditLink href={CREDIT_LINKS.photon}>Photon</CreditLink>
+                  {', '}
+                  <CreditLink href={CREDIT_LINKS.osm}>
+                    © OpenStreetMap
+                  </CreditLink>
                 </dd>
               </div>
               <div>
-                <dt>{t('about.departures')}</dt>
+                <dt>{t('about.elevation')}</dt>
                 <dd>
-                  <a
-                    href={PROJECT_LINKS.transportOpenData}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    transport.opendata.ch
-                  </a>
+                  <CreditLink href={CREDIT_LINKS.openMeteo}>
+                    Open-Meteo
+                  </CreditLink>
+                  {', '}
+                  <CreditLink href={CREDIT_LINKS.copernicus}>
+                    Copernicus DEM GLO-90
+                  </CreditLink>
+                </dd>
+              </div>
+              <div>
+                <dt>{t('about.hikingTime')}</dt>
+                <dd>
+                  <CreditLink href={CREDIT_LINKS.mide}>
+                    {t('about.hikingTimeMethod')}
+                  </CreditLink>
                 </dd>
               </div>
             </dl>
