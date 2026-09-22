@@ -20,6 +20,8 @@ interface SavedRoutesDialogProps {
   onOpenRoute: (id: string) => void;
   /** Deletes one saved route and its no longer referenced tiles. */
   onDeleteRoute: (id: string) => Promise<void>;
+  /** Starts saving the itinerary on screen, or null when there is none. */
+  onSaveCurrentRoute: (() => void) | null;
 }
 
 /** Formats a byte count with one decimal in the interface locale. */
@@ -45,6 +47,7 @@ export default function SavedRoutesDialog({
   loadRoutes,
   onOpenRoute,
   onDeleteRoute,
+  onSaveCurrentRoute,
 }: SavedRoutesDialogProps) {
   const { locale, t } = useI18n();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -135,6 +138,18 @@ export default function SavedRoutesDialog({
         </header>
 
         <div className="about-dialog-content">
+          {onSaveCurrentRoute ? (
+            <button
+              type="button"
+              className="route-export-dialog-button saved-routes-save-current"
+              onClick={onSaveCurrentRoute}
+            >
+              {t('offline.saveCurrent')}
+            </button>
+          ) : (
+            <p className="saved-routes-hint">{t('offline.noCurrentRoute')}</p>
+          )}
+
           {error && (
             <p className="saved-routes-error" role="alert">
               {t('offline.loadError')}

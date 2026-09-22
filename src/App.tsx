@@ -590,6 +590,11 @@ export default function App() {
   });
 
   const isOffline = useOfflineMapZoomLimit(mapRuntimeRef, status);
+  /** Same availability rule as the export button in the map controls. */
+  const canExportCurrentItinerary = Boolean(
+    importedRouteSource ||
+      (!isRouteOperationPending && routeHistory.steps.length >= 2),
+  );
 
   /** Offline storage for the itinerary named in the export dialog. */
   const offlineSaveOption: OfflineSaveOption | null = isOfflineStorageSupported()
@@ -1104,6 +1109,14 @@ export default function App() {
         loadRoutes={listSavedRoutes}
         onOpenRoute={(id) => void openSavedRoute(id)}
         onDeleteRoute={removeSavedRoute}
+        onSaveCurrentRoute={
+          canExportCurrentItinerary
+            ? () => {
+                setIsSavedRoutesDialogOpen(false);
+                requestCurrentItineraryExport();
+              }
+            : null
+        }
       />
 
       {isOffline && (

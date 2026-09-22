@@ -207,8 +207,10 @@ const spanishTranslations = {
   'offline.unsupported': 'Este navegador no permite guardar rutas sin conexión.',
   'offline.list': 'Rutas guardadas',
   'offline.listTitle': 'Rutas sin conexión',
-  'offline.empty':
-    'Todavía no has guardado ninguna ruta. Crea o carga una ruta y usa «Exportar la ruta» → «Guardar para usar sin conexión».',
+  'offline.empty': 'Todavía no has guardado ninguna ruta.',
+  'offline.saveCurrent': 'Guardar la ruta actual sin conexión',
+  'offline.noCurrentRoute':
+    'Para guardar una ruta, primero créala con el botón «Crear una ruta» (el primero de la columna de botones) o cárgala desde un GPX; después vuelve aquí.',
   'offline.open': 'Abrir',
   'offline.delete': 'Borrar',
   'offline.confirmDelete': '¿Borrar?',
@@ -409,8 +411,10 @@ const englishTranslations: Record<TranslationKey, string> = {
   'offline.unsupported': 'This browser cannot save routes for offline use.',
   'offline.list': 'Saved routes',
   'offline.listTitle': 'Offline routes',
-  'offline.empty':
-    'You have not saved any route yet. Create or load a route and use “Export the route” → “Save for offline use”.',
+  'offline.empty': 'You have not saved any route yet.',
+  'offline.saveCurrent': 'Save the current route offline',
+  'offline.noCurrentRoute':
+    'To save a route, first draw it with the “Create a route” button (the first one in the button column) or load a GPX, then come back here.',
   'offline.open': 'Open',
   'offline.delete': 'Delete',
   'offline.confirmDelete': 'Delete?',

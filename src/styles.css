@@ -2289,3 +2289,7 @@ select {
   text-align: center;
   pointer-events: none;
 }
+
+.saved-routes-save-current {
+  margin-bottom: 1rem;
+}
