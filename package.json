@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "generate:localized-pages": "node scripts/generate-localized-pages.mjs",
-    "predev": "npm run generate:localized-pages",
+    "predev": "pnpm run generate:localized-pages",
     "dev": "vite",
-    "prebuild": "npm run generate:localized-pages",
+    "prebuild": "pnpm run generate:localized-pages",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
@@ -28,5 +28,6 @@
     "typescript": "^5.9.0",
     "vite": "^8.0.0",
     "vitest": "^4.1.10"
-  }
+  },
+  "packageManager": "pnpm@11.2.2"
 }
